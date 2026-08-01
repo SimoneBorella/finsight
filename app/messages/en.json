@@ -1,0 +1,213 @@
+{
+  "Categories": {
+    "Salary": "Salary",
+    "Refunds": "Refunds",
+    "Extra Income": "Extra Income",
+    "Rent & Mortgage": "Rent & Mortgage",
+    "Utilities": "Utilities",
+    "Maintenance & Furniture": "Maintenance & Furniture",
+    "Fuel": "Fuel",
+    "Insurance & Taxes": "Insurance & Taxes",
+    "Car Maintenance": "Car Maintenance",
+    "Public Transport & Parking": "Public Transport & Parking",
+    "Groceries": "Groceries",
+    "Basic Clothing": "Basic Clothing",
+    "Medical Expenses": "Medical Expenses",
+    "Personal Care": "Personal Care",
+    "Other Needs": "Other Needs",
+    "Restaurants & Bars": "Restaurants & Bars",
+    "Entertainment & Games": "Entertainment & Games",
+    "Hobbies & Music": "Hobbies & Music",
+    "Sports": "Sports",
+    "Travel & Holidays": "Travel & Holidays",
+    "Gifts": "Gifts",
+    "Culture": "Culture",
+    "Other Wants": "Other Wants"
+  },
+  "Landing": {
+    "titleHighlight": "Smart Finance",
+    "subtitle": "Your personal platform to track, analyze, and optimize your financial life with ease.",
+    "loginButton": "Log in"
+  },
+  "Header": {
+    "accountSettings": "Account Settings",
+    "logout": "Log out",
+    "adminRole": "Admin"
+  },
+  "Sidebar": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "annotations": "Annotations",
+    "settings": "Settings"
+  },
+  "Login": {
+    "title": "Welcome back",
+    "description": "Enter your credentials to access FinSight.",
+    "identifierLabel": "Username or Email",
+    "passwordLabel": "Password",
+    "invalidCredentials": "Invalid credentials. Please try again.",
+    "loading": "Signing in...",
+    "signInButton": "Sign In"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Here are the key insights on your finances for the current month.",
+    "incomeMonth": "Income (Month)",
+    "incomeUpdated": "Updated to this month",
+    "expenseMonth": "Expenses (Month)",
+    "expenseTotal": "Total expenses recorded",
+    "netBalance": "Net Balance",
+    "netDifference": "Income/expense difference",
+    "savingsRate": "Savings Rate",
+    "savingsCapital": "Share of capital retained",
+    "trendTitle": "Income vs Expenses Trend",
+    "trendSubtitle": "Monthly comparison of recent periods",
+    "noChartData": "No data available for the chart",
+    "categoryTitle": "Expenses by Category",
+    "categorySubtitle": "Distribution of the current month",
+    "noCategoryData": "No expenses recorded this month.",
+    "analyzeTitle": "Want to analyze specific transactions?",
+    "analyzeSubtitle": "Filter by date, user or category in the full history.",
+    "historyButton": "Transaction History",
+    "annotationsTitle": "Annotations Management",
+    "annotationsSubtitle": "Write down reminders or ideas related to your expenses.",
+    "annotationsButton": "Open Annotations",
+    "income": "Income",
+    "expenses": "Expenses",
+    "amount": "Amount"
+  },
+  "Transactions": {
+    "title": "Transaction History",
+    "filters": {
+      "user": "User",
+      "allUsers": "All users",
+      "type": "Type",
+      "allTypes": "All",
+      "expense": "Expenses",
+      "income": "Income",
+      "category": "Category",
+      "allCategories": "All categories",
+      "fromDate": "From Date",
+      "toDate": "To Date",
+      "reset": "Reset"
+    },
+    "table": {
+      "date": "Date",
+      "user": "User",
+      "category": "Category",
+      "description": "Description",
+      "amount": "Amount",
+      "actions": "Actions",
+      "noTransactions": "No transactions found."
+    },
+    "pagination": {
+      "showing": "Showing {start}-{end} of {total} transactions",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "deleteModal": {
+      "title": "Confirm Deletion",
+      "description": "Are you sure you want to permanently delete this transaction? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "editModal": {
+      "title": "Edit Transaction",
+      "amount": "Amount",
+      "category": "Category",
+      "description": "Description",
+      "date": "Date",
+      "cancel": "Cancel",
+      "save": "Save Changes",
+      "defaultError": "Error during modification. Please try again.",
+      "networkError": "A network or system error occurred."
+    },
+    "accessDenied": "Access denied."
+  },
+  "Annotations": {
+    "title": "Annotations",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save",
+    "edit": "Edit",
+    "placeholder": "Write your markdown annotations here..."
+  },
+  "Settings": {
+    "title": "Settings",
+    "subtitle": "Manage your preferences and personal settings.",
+    "tabs": {
+      "categories": "Categories",
+      "users": "Users"
+    },
+    "changePassword": "Change Password",
+    "usersManagement": {
+      "title": "Users Management",
+      "subtitle": "Add, remove, or manage system user roles.",
+      "newUser": "New User",
+      "nameCol": "Name (name.surname)",
+      "emailCol": "Email",
+      "roleCol": "Role",
+      "actionsCol": "Actions",
+      "noUsers": "No users found",
+      "adminOnly": "Section restricted to administrators.",
+      "removeAdmin": "Remove Admin",
+      "makeAdmin": "Promote to Admin",
+      "nameFormatError": "Username must be in the format name.surname (e.g. john.doe)"
+    },
+    "addUserModal": {
+      "title": "Create New User",
+      "description": "Enter the new account details. The name must follow the name.surname format.",
+      "nameLabel": "Name (e.g. john.doe)",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "cancel": "Cancel",
+      "submit": "Create User",
+      "saving": "Creating...",
+      "defaultError": "Error creating user"
+    },
+    "deleteUserModal": {
+      "title": "Delete User",
+      "description": "Are you sure you want to delete user {name}? All their transactions will be automatically transferred to the administrator.",
+      "cancel": "Cancel",
+      "confirm": "Confirm & Delete"
+    },
+    "passwordModal": {
+      "title": "Change Password",
+      "description": "Enter your current password and your new password.",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "cancel": "Close",
+      "submit": "Update Password",
+      "success": "Password updated successfully!",
+      "defaultError": "Error changing password"
+    }
+  },
+  "AddTransactionModal": {
+    "newTransaction": "New transaction",
+    "title": "New Transaction",
+    "description": "Enter the details to record a new income or expense.",
+    "expense": "Expense",
+    "income": "Income",
+    "amount": "Amount",
+    "currency": "Currency",
+    "category": "Category",
+    "loadingCategories": "Loading...",
+    "noCategoriesFound": "No categories found",
+    "descriptionLabel": "Description (Optional)",
+    "date": "Date",
+    "defaultError": "Error while saving. Please try again.",
+    "networkError": "A network or system error occurred.",
+    "saving": "Saving...",
+    "saveButton": "Save Transaction"
+  },
+  "ApiErrors": {
+    "unauthorized": "Unauthorized access.",
+    "missingData": "Missing mandatory data.",
+    "invalidAmount": "The amount must be greater than 0.",
+    "descriptionTooLong": "Description cannot exceed 255 characters.",
+    "invalidCategory": "Invalid category selected.",
+    "invalidId": "Invalid transaction ID.",
+    "notFound": "Transaction not found.",
+    "internalError": "Internal server error."
+  }
+}

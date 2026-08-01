@@ -1,0 +1,213 @@
+{
+  "Categories": {
+    "Salary": "Stipendio",
+    "Refunds": "Rimborsi",
+    "Extra Income": "Entrate Extra",
+    "Rent & Mortgage": "Affitto e Mutuo",
+    "Utilities": "Utenze",
+    "Maintenance & Furniture": "Manutenzione e Arredo",
+    "Fuel": "Carburante",
+    "Insurance & Taxes": "Assicurazioni e Tasse",
+    "Car Maintenance": "Manutenzione Auto",
+    "Public Transport & Parking": "Mezzi Pubblici e Parcheggi",
+    "Groceries": "Alimentari",
+    "Basic Clothing": "Abbigliamento Base",
+    "Medical Expenses": "Spese Mediche",
+    "Personal Care": "Cura Personale",
+    "Other Needs": "Altre Necessità",
+    "Restaurants & Bars": "Ristoranti e Bar",
+    "Entertainment & Games": "Intrattenimento e Giochi",
+    "Hobbies & Music": "Hobby e Musica",
+    "Sports": "Sport",
+    "Travel & Holidays": "Viaggi e Vacanze",
+    "Gifts": "Regali",
+    "Culture": "Cultura",
+    "Other Wants": "Altri Svuoti / Sfizi"
+  },
+  "Landing": {
+    "titleHighlight": "Finanza Intelligente",
+    "subtitle": "La tua piattaforma personale per monitorare, analizzare e ottimizzare le tue finanze con semplicità.",
+    "loginButton": "Accedi"
+  },
+  "Header": {
+    "accountSettings": "Impostazioni Account",
+    "logout": "Esci",
+    "adminRole": "Amministratore"
+  },
+  "Sidebar": {
+    "dashboard": "Pannello di controllo",
+    "transactions": "Transazioni",
+    "annotations": "Annotazioni",
+    "settings": "Impostazioni"
+  },
+  "Login": {
+    "title": "Bentornato",
+    "description": "Inserisci le tue credenziali per accedere a FinSight.",
+    "identifierLabel": "Username o Email",
+    "passwordLabel": "Password",
+    "invalidCredentials": "Credenziali non valide. Riprova.",
+    "loading": "Accesso in corso...",
+    "signInButton": "Accedi"
+  },
+  "Dashboard": {
+    "title": "Pannello di controllo",
+    "subtitle": "Ecco gli insight chiave sulle tue finanze per il mese corrente.",
+    "incomeMonth": "Entrate (Mese)",
+    "incomeUpdated": "Aggiornato a questo mese",
+    "expenseMonth": "Uscite (Mese)",
+    "expenseTotal": "Spese totali registrate",
+    "netBalance": "Bilancio Netto",
+    "netDifference": "Differenza entrate/uscite",
+    "savingsRate": "Tasso di Risparmio",
+    "savingsCapital": "Quota di capitale trattenuta",
+    "trendTitle": "Trend Entrate vs Uscite",
+    "trendSubtitle": "Confronto mensile degli ultimi periodi",
+    "noChartData": "Nessun dato disponibile per il grafico",
+    "categoryTitle": "Spese per Categoria",
+    "categorySubtitle": "Distribuzione del mese in corso",
+    "noCategoryData": "Nessuna spesa registrata questo mese.",
+    "analyzeTitle": "Vuoi analizzare transazioni specifiche?",
+    "analyzeSubtitle": "Filtra per data, utente o categoria nello storico completo.",
+    "historyButton": "Storico Transazioni",
+    "annotationsTitle": "Gestione Annotazioni",
+    "annotationsSubtitle": "Annota promemoria o idee relative alle tue spese.",
+    "annotationsButton": "Apri Annotazioni",
+    "income": "Entrate",
+    "expenses": "Uscite",
+    "amount": "Importo"
+  },
+  "Transactions": {
+    "title": "Storico Transazioni",
+    "filters": {
+      "user": "Utente",
+      "allUsers": "Tutti gli utenti",
+      "type": "Tipo",
+      "allTypes": "Tutti",
+      "expense": "Uscite",
+      "income": "Entrate",
+      "category": "Categoria",
+      "allCategories": "Tutte le categorie",
+      "fromDate": "Da Data",
+      "toDate": "A Data",
+      "reset": "Reset"
+    },
+    "table": {
+      "date": "Data",
+      "user": "Utente",
+      "category": "Categoria",
+      "description": "Descrizione",
+      "amount": "Importo",
+      "actions": "Azioni",
+      "noTransactions": "Nessuna transazione trovata."
+    },
+    "pagination": {
+      "showing": "Mostrando {start}-{end} di {total} transazioni",
+      "previous": "Precedente",
+      "next": "Successiva"
+    },
+    "deleteModal": {
+      "title": "Conferma Eliminazione",
+      "description": "Sei sicuro di voler eliminare definitivamente questa transazione? L'operazione non può essere annullata.",
+      "cancel": "Annulla",
+      "confirm": "Elimina"
+    },
+    "editModal": {
+      "title": "Modifica Transazione",
+      "amount": "Importo",
+      "category": "Categoria",
+      "description": "Descrizione",
+      "date": "Data",
+      "cancel": "Annulla",
+      "save": "Salva Modifiche",
+      "defaultError": "Errore durante la modifica. Riprova.",
+      "networkError": "Si è verificato un errore di rete o di sistema."
+    },
+    "accessDenied": "Accesso negato."
+  },
+  "Annotations": {
+    "title": "Annotazioni",
+    "cancel": "Annulla",
+    "saving": "Salvataggio...",
+    "save": "Salva",
+    "edit": "Modifica",
+    "placeholder": "Scrivi qui i tuoi appunti in Markdown..."
+  },
+  "Settings": {
+    "title": "Impostazioni",
+    "subtitle": "Gestisci le tue preferenze e impostazioni personali.",
+    "tabs": {
+      "categories": "Categorie",
+      "users": "Utenti"
+    },
+    "changePassword": "Cambia Password",
+    "usersManagement": {
+      "title": "Gestione Utenti",
+      "subtitle": "Aggiungi, rimuovi o gestisci i ruoli degli utenti del sistema.",
+      "newUser": "Nuovo Utente",
+      "nameCol": "Nome (nome.cognome)",
+      "emailCol": "Email",
+      "roleCol": "Ruolo",
+      "actionsCol": "Azioni",
+      "noUsers": "Nessun utente trovato",
+      "adminOnly": "Sezione riservata agli amministratori.",
+      "removeAdmin": "Rimuovi Admin",
+      "makeAdmin": "Promuovi Admin",
+      "nameFormatError": "Il nome utente deve essere nel formato nome.cognome (es. mario.rossi)"
+    },
+    "addUserModal": {
+      "title": "Crea Nuovo Utente",
+      "description": "Inserisci i dati del nuovo account. Il nome deve essere nel formato nome.cognome.",
+      "nameLabel": "Nome (es. mario.rossi)",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "cancel": "Annulla",
+      "submit": "Crea Utente",
+      "saving": "Creazione...",
+      "defaultError": "Errore durante la creazione dell'utente"
+    },
+    "deleteUserModal": {
+      "title": "Elimina Utente",
+      "description": "Sei sicuro di voler eliminare l'utente {name}? Tutte le sue transazioni verranno automaticamente trasferite all'amministratore.",
+      "cancel": "Annulla",
+      "confirm": "Conferma ed Elimina"
+    },
+    "passwordModal": {
+      "title": "Cambia Password",
+      "description": "Inserisci la tua password attuale e la nuova password.",
+      "currentPassword": "Password Attuale",
+      "newPassword": "Nuova Password",
+      "cancel": "Chiudi",
+      "submit": "Aggiorna Password",
+      "success": "Password aggiornata con successo!",
+      "defaultError": "Errore durante il cambio password"
+    }
+  },
+  "AddTransactionModal": {
+    "newTransaction": "Nuova transazione",
+    "title": "Nuova Transazione",
+    "description": "Inserisci i dettagli per registrare una nuova entrata o uscita.",
+    "expense": "Uscita",
+    "income": "Entrata",
+    "amount": "Importo",
+    "currency": "Valuta",
+    "category": "Categoria",
+    "loadingCategories": "Caricamento...",
+    "noCategoriesFound": "Nessuna categoria trovata",
+    "descriptionLabel": "Descrizione (Opzionale)",
+    "date": "Data",
+    "defaultError": "Errore durante il salvataggio. Riprova.",
+    "networkError": "Si è verificato un errore di rete o di sistema.",
+    "saving": "Salvataggio in corso...",
+    "saveButton": "Salva Transazione"
+  },
+  "ApiErrors": {
+    "unauthorized": "Accesso non autorizzato.",
+    "missingData": "Dati obbligatori mancanti.",
+    "invalidAmount": "L'importo deve essere maggiore di 0.",
+    "descriptionTooLong": "La descrizione non può superare i 255 caratteri.",
+    "invalidCategory": "Categoria selezionata non valida.",
+    "invalidId": "ID transazione non valido.",
+    "notFound": "Transazione non trovata.",
+    "internalError": "Errore interno del server."
+  }
+}
