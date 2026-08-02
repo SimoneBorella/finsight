@@ -22,7 +22,15 @@
     "Travel & Holidays": "Travel & Holidays",
     "Gifts": "Gifts",
     "Culture": "Culture",
-    "Other Wants": "Other Wants"
+    "Other Wants": "Other Wants",
+    "Income": "Income",
+    "Housing & Utilities": "Housing & Utilities",
+    "Car & Transport": "Car & Transport",
+    "Daily Life": "Daily Life",
+    "Health & Hygiene": "Health & Hygiene",
+    "Miscellaneous": "Miscellaneous",
+    "Free Time": "Free Time",
+    "Lifestyle": "Lifestyle"
   },
   "Landing": {
     "titleHighlight": "Smart Finance",
@@ -137,6 +145,7 @@
     "subtitle": "Manage your preferences and personal settings.",
     "tabs": {
       "categories": "Categories",
+      "password": "Change Password",
       "users": "Users"
     },
     "changePassword": "Change Password",
@@ -144,7 +153,7 @@
       "title": "Users Management",
       "subtitle": "Add, remove, or manage system user roles.",
       "newUser": "New User",
-      "nameCol": "Name (name.surname)",
+      "nameCol": "Username",
       "emailCol": "Email",
       "roleCol": "Role",
       "actionsCol": "Actions",
@@ -152,17 +161,25 @@
       "adminOnly": "Section restricted to administrators.",
       "removeAdmin": "Remove Admin",
       "makeAdmin": "Promote to Admin",
-      "nameFormatError": "Username must be in the format name.surname (e.g. john.doe)"
+      "nameFormatError": "Generated username is not valid.",
+      "roleSuperuser": "Superuser",
+      "roleAdmin": "Admin",
+      "roleUser": "User"
     },
     "addUserModal": {
       "title": "Create New User",
-      "description": "Enter the new account details. The name must follow the name.surname format.",
-      "nameLabel": "Name (e.g. john.doe)",
+      "description": "Enter data. The system will automatically generate the username.",
+      "firstNameLabel": "First Name",
+      "lastNameLabel": "Last Name",
       "emailLabel": "Email",
+      "roleLabel": "Role",
+      "roleUser": "User",
+      "roleAdmin": "Administrator",
       "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm Password",
       "cancel": "Cancel",
       "submit": "Create User",
-      "saving": "Creating...",
+      "passwordMismatch": "Passwords do not match",
       "defaultError": "Error creating user"
     },
     "deleteUserModal": {
@@ -180,6 +197,18 @@
       "submit": "Update Password",
       "success": "Password updated successfully!",
       "defaultError": "Error changing password"
+    },
+    "categoriesManagement": {
+      "title": "Categories Management",
+      "subtitle": "View the category structure organized by type and budget groups.",
+      "incomeType": "Income",
+      "expenseType": "Expenses",
+      "noCategories": "No categories found."
+    },
+    "budgetGroups": {
+      "needs": "Needs",
+      "wants": "Wants",
+      "income": "Income"
     }
   },
   "AddTransactionModal": {
@@ -208,6 +237,12 @@
     "invalidCategory": "Invalid category selected.",
     "invalidId": "Invalid transaction ID.",
     "notFound": "Transaction not found.",
-    "internalError": "Internal server error."
+    "internalError": "Internal server error.",
+    "invalidPassword": "The current password is incorrect.",
+    "passwordTooShort": "The new password must be at least 6 characters long.",
+    "emailInUse": "This email is already associated with an account.",
+    "nameInUse": "This username already exists.",
+    "cannotDeleteSelf": "You cannot delete your own account.",
+    "cannotDeleteAdmin": "The main administrator account cannot be deleted."
   }
 }

@@ -20,6 +20,7 @@ import {
 export function UserNav() {
   const { data: session, status } = useSession();
   const t = useTranslations("Header"); 
+  const tSettings = useTranslations("Settings"); 
 
   if (status === "loading") {
     return <div className="h-9 w-9 animate-pulse rounded-full bg-muted"></div>;
@@ -43,6 +44,7 @@ export function UserNav() {
   };
 
   const initials = getNameInitials(session.user?.name);
+  const userRole = (session.user as any)?.role;
 
   return (
     <DropdownMenu>
@@ -63,26 +65,27 @@ export function UserNav() {
             <p className="text-xs leading-none text-muted-foreground">
               {session.user?.email}
             </p>
-            {(session.user as any)?.role === "admin" && (
+            
+            {/* Badge Dinamico per Ruolo */}
+            {userRole === "superuser" && (
+              <span className="mt-1 inline-flex w-fit items-center rounded-md bg-purple-500/10 px-2 py-0.5 text-[10px] font-medium text-purple-600 dark:text-purple-400">
+                {tSettings("usersManagement.roleSuperuser", { default: "Superuser" })}
+              </span>
+            )}
+            {userRole === "admin" && (
               <span className="mt-1 inline-flex w-fit items-center rounded-md bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">
-                {t("adminRole")}
+                {tSettings("usersManagement.roleAdmin", { default: "Admin" })}
+              </span>
+            )}
+            {userRole === "user" && (
+              <span className="mt-1 inline-flex w-fit items-center rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
+                {tSettings("usersManagement.roleUser", { default: "Utente" })}
               </span>
             )}
           </div>
         </DropdownMenuLabel>
         
         <DropdownMenuSeparator />
-        
-        {/* <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/settings?tab=users" className="cursor-pointer flex w-full items-center">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>{t("accountSettings")}</span>
-            </Link>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        
-        <DropdownMenuSeparator /> */}
         
         <DropdownMenuItem 
           className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"

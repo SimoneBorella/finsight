@@ -14,12 +14,23 @@ export async function GET() {
     await client.connect();
     const db = client.db("finsight_db");
 
-    // Formato atteso nella collection: { name: string, type: "income" | "expense", color: string }
-    const categories = await db.collection("categories").find({}).toArray();
+    const rawCategories = await db.collection("categories").find({}).toArray();
     await client.close();
+
+    // Mappiamo i campi snake_case del DB nel formato camelCase atteso dal frontend
+    const categories = rawCategories.map((cat: any) => ({
+      _id: cat._id,
+      name: cat.name,
+      type: cat.type,
+      color: cat.color,
+      description: cat.description,
+      budgetGroup: cat.budget_group || cat.budgetGroup || "Altro",
+      parentCategory: cat.parent_category || cat.parentCategory || null,
+    }));
 
     return NextResponse.json(categories);
   } catch (error) {
+    console.error("Errore GET Categories:", error);
     return NextResponse.json({ error: "internalError" }, { status: 500 });
   }
 }

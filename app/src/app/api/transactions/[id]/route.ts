@@ -9,7 +9,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    if (!session || !session.user) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
@@ -19,9 +19,26 @@ export async function DELETE(
       return NextResponse.json({ error: "invalidId" }, { status: 400 });
     }
 
+    const userId = (session.user as any).id;
+    const userRole = (session.user as any).role;
+
     const client = new MongoClient(process.env.MONGODB_URI!);
     await client.connect();
     const db = client.db("finsight_db");
+
+    // 1. Cerchiamo la transazione per verificare i permessi
+    const transaction = await db.collection("transactions").findOne({ _id: new ObjectId(id) });
+
+    if (!transaction) {
+      await client.close();
+      return NextResponse.json({ error: "notFound" }, { status: 404 });
+    }
+
+    // 2. Controllo permessi: Se è un utente standard, può eliminare solo le proprie spese
+    if (userRole === "user" && transaction.userId !== userId) {
+      await client.close();
+      return NextResponse.json({ error: "unauthorized" }, { status: 403 });
+    }
 
     const result = await db.collection("transactions").deleteOne({ _id: new ObjectId(id) });
     await client.close();
@@ -43,7 +60,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
+    if (!session || !session.user) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
@@ -53,8 +70,11 @@ export async function PUT(
       return NextResponse.json({ error: "invalidId" }, { status: 400 });
     }
 
+    const currentUserId = (session.user as any).id;
+    const currentUserRole = (session.user as any).role;
+
     const body = await req.json();
-    const { amount, currency, type, category, description, date } = body;
+    const { amount, currency, type, category, description, date, newUserId } = body;
 
     if (amount === undefined || amount === null || !type || !category) {
       return NextResponse.json({ error: "missingData" }, { status: 400 });
@@ -68,19 +88,40 @@ export async function PUT(
     await client.connect();
     const db = client.db("finsight_db");
 
+    // 1. Verifichiamo che la transazione esista
+    const transaction = await db.collection("transactions").findOne({ _id: new ObjectId(id) });
+    if (!transaction) {
+      await client.close();
+      return NextResponse.json({ error: "notFound" }, { status: 404 });
+    }
+
+    // 2. Controllo permessi: Gli user standard possono modificare solo le proprie
+    if (currentUserRole === "user" && transaction.userId !== currentUserId) {
+      await client.close();
+      return NextResponse.json({ error: "unauthorized" }, { status: 403 });
+    }
+
     const categoryExists = await db.collection("categories").findOne({ name: category, type: type });
     if (!categoryExists) {
       await client.close();
       return NextResponse.json({ error: "invalidCategory" }, { status: 400 });
     }
 
-    const updateData = {
+    // 3. Gestione della proprietà (ownership)
+    // Solo superuser o admin possono modificare la ownership passando un nuovo userId valido
+    let targetUserId = transaction.userId;
+    if ((currentUserRole === "superuser" || currentUserRole === "admin") && newUserId) {
+      targetUserId = newUserId;
+    }
+
+    const updateData: any = {
       amount,
       currency: currency || "EUR",
       type,
       category: categoryExists.name,
       description: description || "",
       date: new Date(date),
+      userId: targetUserId,
       updated_at: new Date(),
     };
 

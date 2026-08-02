@@ -4,7 +4,7 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { FolderKanban, Users, UserPlus, Shield, Trash2, KeyRound, Loader2 } from "lucide-react";
+import { FolderKanban, Users, UserPlus, Shield, Trash2, KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,19 +20,48 @@ interface UserItem {
   _id: string;
   name: string;
   email: string;
-  role: "admin" | "user";
+  role: "superuser" | "admin" | "user";
 }
+
+const PasswordInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, ...props }, ref) => {
+    const [showPassword, setShowPassword] = React.useState(false);
+    return (
+      <div className="relative">
+        <Input
+          type={showPassword ? "text" : "password"}
+          className={`pr-10 ${className || ""}`}
+          ref={ref}
+          {...props}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    );
+  }
+);
+PasswordInput.displayName = "PasswordInput";
 
 export default function SettingsPage() {
   const t = useTranslations("Settings");
+  const tApi = useTranslations("ApiErrors");
+  const tCat = useTranslations("Categories"); // <-- Aggiunto traduttore per le categorie
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   
   const currentUserRole = (session?.user as any)?.role;
   const currentUserId = (session?.user as any)?.id;
 
-  const activeTab = searchParams.get("tab") === "users" ? "users" : "categories";
-
+  const tabParam = searchParams.get("tab");
+  let activeTab = "categories";
+  if (tabParam === "password") activeTab = "password";
+  if (tabParam === "users") activeTab = "users";
+  
   const handleTabChange = (tab: string) => {
     const url = new URL(window.location.href);
     url.searchParams.set("tab", tab);
@@ -47,27 +76,35 @@ export default function SettingsPage() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  // Stati per la gestione utenti (Admin)
+  const [categories, setCategories] = React.useState<any[]>([]);
+
+  // --- STATI GESTIONE UTENTI ---
   const [usersList, setUsersList] = React.useState<UserItem[]>([]);
   const [loadingUsers, setLoadingUsers] = React.useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = React.useState(false);
   const [actionLoading, setActionLoading] = React.useState(false);
   const [userError, setUserError] = React.useState("");
-
-  // Stato Modale Cambio Password
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = React.useState(false);
-  const [passwordError, setPasswordError] = React.useState("");
-  const [passwordSuccess, setPasswordSuccess] = React.useState("");
-
-  // Stato Modale Conferma Eliminazione Utente
   const [userToDelete, setUserToDelete] = React.useState<UserItem | null>(null);
 
-  // Caricamento utenti se admin
+  // --- STATI CAMBIO PASSWORD ---
+  const [passwordError, setPasswordError] = React.useState("");
+  const [passwordSuccess, setPasswordSuccess] = React.useState("");
+  const [passwordLoading, setPasswordLoading] = React.useState(false);
+
+  // Fetch delle categorie all'avvio
+  React.useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch((err) => console.error("Errore caricamento categorie:", err));
+  }, []);
+
   const fetchUsers = React.useCallback(async () => {
-    if (currentUserRole !== "admin") return;
     setLoadingUsers(true);
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch(`/api/users?t=${new Date().getTime()}`, { 
+        cache: "no-store" 
+      });
       if (res.ok) {
         const data = await res.json();
         setUsersList(data);
@@ -75,13 +112,13 @@ export default function SettingsPage() {
     } finally {
       setLoadingUsers(false);
     }
-  }, [currentUserRole]);
+  }, []);
 
   React.useEffect(() => {
-    if (activeTab === "users" && currentUserRole === "admin") {
+    if (activeTab === "users") {
       fetchUsers();
     }
-  }, [activeTab, currentUserRole, fetchUsers]);
+  }, [activeTab, fetchUsers]);
 
   // Handler Creazione Utente
   const handleCreateUser = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -90,22 +127,28 @@ export default function SettingsPage() {
     setActionLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const name = formData.get("name") as string;
+    const firstName = (formData.get("firstName") as string).trim();
+    const lastName = (formData.get("lastName") as string).trim();
     const email = formData.get("email") as string;
+    const role = (formData.get("role") as string) || "user";
     const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
 
-    // Validazione formato nome.cognome (escluso admin)
-    if (name.toLowerCase() !== "admin" && !name.includes(".")) {
-      setUserError(t("usersManagement.nameFormatError"));
+    if (password !== confirmPassword) {
+      setUserError(t("addUserModal.passwordMismatch"));
       setActionLoading(false);
       return;
     }
+
+    const formattedFirstName = firstName.replace(/\s+/g, '').toLowerCase();
+    const formattedLastName = lastName.replace(/\s+/g, '').toLowerCase();
+    const generatedName = `${formattedFirstName}.${formattedLastName}`;
 
     try {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name: generatedName, email, password, role }),
       });
 
       if (res.ok) {
@@ -113,14 +156,13 @@ export default function SettingsPage() {
         fetchUsers();
       } else {
         const errData = await res.json();
-        setUserError(errData.error || t("addUserModal.defaultError"));
+        setUserError(errData.error ? tApi(errData.error as any) : t("addUserModal.defaultError"));
       }
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Handler Cambio Ruolo Admin
   const handleToggleAdmin = async (userId: string, currentRole: string) => {
     const newRole = currentRole === "admin" ? "user" : "admin";
     const res = await fetch(`/api/users/${userId}`, {
@@ -130,10 +172,12 @@ export default function SettingsPage() {
     });
     if (res.ok) {
       fetchUsers();
+    } else {
+      const errData = await res.json();
+      alert(errData.error ? tApi(errData.error as any) : tApi("internalError"));
     }
   };
 
-  // Handler Eliminazione Utente (con migrazione transazioni all'admin)
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
     setActionLoading(true);
@@ -144,20 +188,23 @@ export default function SettingsPage() {
       if (res.ok) {
         setUserToDelete(null);
         fetchUsers();
+      } else {
+        const errData = await res.json();
+        alert(errData.error ? tApi(errData.error as any) : tApi("internalError"));
       }
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Handler Cambio Password personale
   const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setPasswordError("");
     setPasswordSuccess("");
-    setActionLoading(true);
+    setPasswordLoading(true);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const currentPassword = formData.get("currentPassword");
     const newPassword = formData.get("newPassword");
 
@@ -170,129 +217,271 @@ export default function SettingsPage() {
 
       if (res.ok) {
         setPasswordSuccess(t("passwordModal.success"));
-        setTimeout(() => {
-          setIsPasswordModalOpen(false);
-          setPasswordSuccess("");
-        }, 1500);
+        form.reset();
       } else {
         const errData = await res.json();
-        setPasswordError(errData.error || t("passwordModal.defaultError"));
+        setPasswordError(errData.error ? tApi(errData.error as any) : t("passwordModal.defaultError"));
       }
     } finally {
-      setActionLoading(false);
+      setPasswordLoading(false);
     }
   };
 
   return (
-    <div className="@container/main flex flex-col gap-8 py-6 px-4 md:px-6 min-h-[calc(100dvh-var(--header-height)-4rem)]">
+    <div className="@container/main flex flex-col gap-6 py-6 px-4 md:px-6 min-h-[calc(100dvh-var(--header-height)-4rem)]">
       
-      {/* Intestazione */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      {/* Sistema di Tab */}
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between border-b pb-3">
+      <div className="flex flex-col flex-1 gap-6 min-h-0">
+        
+        {/* Navigazione Tab */}
+        <div className="flex items-center border-b pb-3 overflow-x-auto whitespace-nowrap shrink-0">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleTabChange("categories")}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                activeTab === "categories"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
+            <button onClick={() => handleTabChange("categories")} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "categories" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
               <FolderKanban className="h-4 w-4" />
               {t("tabs.categories")}
             </button>
-
-            <button
-              onClick={() => handleTabChange("users")}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                activeTab === "users"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
+            <button onClick={() => handleTabChange("password")} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "password" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+              <KeyRound className="h-4 w-4" />
+              {t("tabs.password")}
+            </button>
+            <button onClick={() => handleTabChange("users")} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "users" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
               <Users className="h-4 w-4" />
               {t("tabs.users")}
             </button>
           </div>
-
-          {/* Bottone cambio password personale sempre disponibile */}
-          <Button variant="outline" onClick={() => setIsPasswordModalOpen(true)}>
-            <KeyRound className="h-4 w-4 mr-2" />
-            {t("changePassword")}
-          </Button>
         </div>
 
-        {/* Contenuto dei Tab */}
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm min-h-[300px]">
+        {/* Contenitore dei Tab */}
+        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex-1 flex flex-col min-h-0">
           
-          {/* TAB CATEGORIE */}
+          {/* TAB: CATEGORIE */}
           {activeTab === "categories" && (
-            <div className="text-center text-muted-foreground py-16">
-              <FolderKanban className="mx-auto h-10 w-10 opacity-40 mb-2" />
-              <p className="text-sm">Gestione categorie in arrivo...</p>
+            <div className="flex-1 flex flex-col min-h-0 space-y-6">
+              <div className="shrink-0">
+                <h3 className="font-semibold text-lg">{t("categoriesManagement.title", { default: "Gestione Categorie" })}</h3>
+                <p className="text-xs text-muted-foreground">{t("categoriesManagement.subtitle", { default: "Visualizza la struttura delle categorie." })}</p>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-auto border rounded-md p-6 space-y-8">
+                {categories.length === 0 ? (
+                  <div className="flex h-24 items-center justify-center text-muted-foreground text-sm">
+                    {t("categoriesManagement.noCategories", { default: "Nessuna categoria trovata." })}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Colonne separate per Uscite ("expense") e Entrate ("income") */}
+                    {(["expense", "income"] as const).map((type) => {
+                      const typeCategories = categories.filter(c => c.type === type);
+                      if (typeCategories.length === 0) return null;
+
+                      // 1. Raggruppiamo prima per budgetGroup
+                      const groupedByBudget = typeCategories.reduce((acc: any, cat) => {
+                        const group = cat.budgetGroup || "Altro";
+                        if (!acc[group]) acc[group] = [];
+                        acc[group].push(cat);
+                        return acc;
+                      }, {});
+
+                      return (
+                        <div key={type} className="space-y-6">
+                          <div className="border-b pb-3">
+                            <h4 className="font-bold text-base tracking-wide uppercase text-foreground">
+                              {type === "income" ? t("categoriesManagement.incomeType", { default: "Entrate" }) : t("categoriesManagement.expenseType", { default: "Uscite" })}
+                            </h4>
+                          </div>
+
+                          <div className="space-y-6">
+                            {Object.entries(groupedByBudget).map(([budgetGroup, cats]: [string, any]) => {
+                              const groupKey = `budgetGroups.${budgetGroup.toLowerCase()}`;
+                              const translatedGroup = t.has(groupKey as any) ? t(groupKey as any) : budgetGroup;
+
+                              // 2. All'interno del budgetGroup, raggruppiamo per parentCategory
+                              const groupedByParent = cats.reduce((acc: any, cat: any) => {
+                                const parent = cat.parentCategory || "Generale";
+                                if (!acc[parent]) acc[parent] = [];
+                                acc[parent].push(cat);
+                                return acc;
+                              }, {});
+
+                              return (
+                                <div key={budgetGroup} className="space-y-4 rounded-xl border bg-muted/20 p-4 shadow-sm">
+                                  {/* Intestazione del Gruppo di Budget */}
+                                  <div className="flex items-center justify-between border-b pb-2">
+                                    <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-md">
+                                      {translatedGroup}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {cats.length} {cats.length === 1 ? 'categoria' : 'categorie'}
+                                    </span>
+                                  </div>
+
+                                  {/* Sotto-raggruppamento marcato per Parent Category */}
+                                  <div className="space-y-4 pt-1">
+                                    {Object.entries(groupedByParent).map(([parentCat, subCats]: [string, any]) => {
+                                      // Colore rappresentativo della macro-categoria basato sulla prima sotto-categoria che ha un colore
+                                      const representativeCat = subCats.find((c: any) => c.color);
+                                      const groupColor = representativeCat?.color || "#64748b";
+                                      const translatedParent = tCat.has(parentCat) ? tCat(parentCat) : parentCat;
+
+                                      return (
+                                        <div 
+                                          key={parentCat} 
+                                          className="rounded-lg border bg-card p-3 shadow-2xs space-y-2.5"
+                                          style={{
+                                            borderColor: `${groupColor}40`, // Bordo leggermente colorato per marcare il gruppo
+                                          }}
+                                        >
+                                          {/* Badge / Intestazione della Macro-Categoria (Parent Category) */}
+                                          <div className="flex items-center justify-between">
+                                            <span 
+                                              className="text-xs font-bold px-2 py-0.5 rounded-md border"
+                                              style={{
+                                                backgroundColor: `${groupColor}15`,
+                                                color: groupColor,
+                                                borderColor: `${groupColor}40`,
+                                              }}
+                                            >
+                                              {translatedParent}
+                                            </span>
+                                            <span className="text-[10px] text-muted-foreground">
+                                              {subCats.length} {subCats.length === 1 ? 'voce' : 'voci'}
+                                            </span>
+                                          </div>
+
+                                          {/* Lista delle sotto-categorie */}
+                                          <div className="space-y-1.5 pl-2">
+                                            {subCats.map((cat: any) => {
+                                              const catColor = cat.color || groupColor;
+                                              return (
+                                                <div 
+                                                  key={cat._id || cat.name}
+                                                  className="flex items-center justify-between p-2 rounded-md bg-muted/40 transition-all hover:bg-muted/70"
+                                                >
+                                                  <div className="flex items-center gap-2.5">
+                                                    <span 
+                                                      className="h-2 w-2 rounded-full shrink-0" 
+                                                      style={{ backgroundColor: catColor }}
+                                                    />
+                                                    <span className="text-xs font-medium text-foreground">
+                                                      {tCat.has(cat.name) ? tCat(cat.name) : cat.name}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {/* TAB UTENTI */}
-          {activeTab === "users" && (
-            <div className="space-y-6">
-              
-              {currentUserRole === "admin" ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">{t("usersManagement.title")}</h3>
-                      <p className="text-xs text-muted-foreground">{t("usersManagement.subtitle")}</p>
-                    </div>
-                    <Button onClick={() => { setUserError(""); setIsAddUserOpen(true); }}>
-                      <UserPlus className="h-4 w-4 mr-2" /> {t("usersManagement.newUser")}
-                    </Button>
-                  </div>
+          {/* TAB: CAMBIO PASSWORD */}
+          {activeTab === "password" && (
+            <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full space-y-8">
+              <div>
+                <h3 className="font-semibold text-xl">{t("passwordModal.title")}</h3>
+                <p className="text-sm text-muted-foreground mt-2">{t("passwordModal.description")}</p>
+              </div>
+              <form onSubmit={handleChangePassword} className="space-y-6">
+                <div className="space-y-3">
+                  <Label>{t("passwordModal.currentPassword")}</Label>
+                  <PasswordInput name="currentPassword" required />
+                </div>
+                <div className="space-y-3">
+                  <Label>{t("passwordModal.newPassword")}</Label>
+                  <PasswordInput name="newPassword" required />
+                </div>
+                {passwordError && <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md text-center border border-destructive/20">{passwordError}</div>}
+                {passwordSuccess && <div className="p-3 text-sm text-emerald-600 bg-emerald-500/10 rounded-md text-center border border-emerald-500/20">{passwordSuccess}</div>}
+                <div className="pt-4">
+                  <Button type="submit" disabled={passwordLoading} className="w-full sm:w-auto">
+                    {passwordLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : t("passwordModal.submit")}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
 
-                  <div className="rounded-md border relative overflow-x-auto">
-                    {loadingUsers && (
-                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </div>
-                    )}
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t("usersManagement.nameCol")}</TableHead>
-                          <TableHead>{t("usersManagement.emailCol")}</TableHead>
-                          <TableHead>{t("usersManagement.roleCol")}</TableHead>
+          {/* TAB: UTENTI */}
+          {activeTab === "users" && (
+            <div className="flex-1 flex flex-col min-h-0 space-y-6"> 
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+                <div>
+                  <h3 className="font-semibold text-lg">{t("usersManagement.title")}</h3>
+                  <p className="text-xs text-muted-foreground">{t("usersManagement.subtitle")}</p>
+                </div>
+                {(currentUserRole === "superuser" || currentUserRole === "admin") && (
+                  <Button onClick={() => { setUserError(""); setIsAddUserOpen(true); }}>
+                    <UserPlus className="h-4 w-4 mr-2" /> {t("usersManagement.newUser")}
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-auto border rounded-md">
+                <div className="relative">
+                  {loadingUsers && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  )}
+                  <Table>
+                    <TableHeader className="bg-muted/50 sticky top-0 z-10 backdrop-blur-sm">
+                      <TableRow>
+                        <TableHead>{t("usersManagement.nameCol")}</TableHead>
+                        <TableHead>{t("usersManagement.emailCol")}</TableHead>
+                        <TableHead>{t("usersManagement.roleCol")}</TableHead>
+                        {currentUserRole === "superuser" && (
                           <TableHead className="text-right">{t("usersManagement.actionsCol")}</TableHead>
+                        )}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {usersList.length === 0 && !loadingUsers ? (
+                        <TableRow>
+                          <TableCell colSpan={currentUserRole === "superuser" ? 4 : 3} className="h-24 text-center text-muted-foreground">
+                            {t("usersManagement.noUsers")}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {usersList.length === 0 && !loadingUsers ? (
-                          <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                              {t("usersManagement.noUsers")}
+                      ) : (
+                        usersList.map((u) => (
+                          <TableRow key={u._id} className="h-16">
+                            <TableCell className="font-medium align-middle">{u.name}</TableCell>
+                            <TableCell className="align-middle">{u.email}</TableCell>
+                            <TableCell className="align-middle">
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold 
+                                ${u.role === 'superuser' ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400' : 
+                                  u.role === 'admin' ? 'bg-destructive/10 text-destructive' : 
+                                  'bg-secondary text-secondary-foreground'}`}>
+                                {u.role === 'superuser' ? t("usersManagement.roleSuperuser", {default: "Superuser"}) :
+                                u.role === 'admin' ? t("usersManagement.roleAdmin", {default: "Admin"}) :
+                                t("usersManagement.roleUser", {default: "Utente"})}
+                              </span>
                             </TableCell>
-                          </TableRow>
-                        ) : (
-                          usersList.map((u) => (
-                            <TableRow key={u._id}>
-                              <TableCell className="font-medium">{u.name}</TableCell>
-                              <TableCell>{u.email}</TableCell>
-                              <TableCell>
-                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${u.role === 'admin' ? 'bg-destructive/10 text-destructive' : 'bg-secondary text-secondary-foreground'}`}>
-                                  {u.role}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right space-x-2">
-                                {u._id !== currentUserId && (
-                                  <>
+                            
+                            {currentUserRole === "superuser" && (
+                              <TableCell className="text-right align-middle space-x-1">
+                                {u.role !== "superuser" && (
+                                  <div className="flex items-center justify-end gap-1">
                                     <Button 
-                                      variant="outline" 
+                                      variant="ghost" 
                                       size="sm"
+                                      className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
                                       onClick={() => handleToggleAdmin(u._id, u.role)}
                                     >
                                       <Shield className="h-3.5 w-3.5 mr-1" />
@@ -301,35 +490,29 @@ export default function SettingsPage() {
                                     <Button 
                                       variant="ghost" 
                                       size="icon" 
-                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                       onClick={() => setUserToDelete(u)}
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
-                                  </>
+                                  </div>
                                 )}
                               </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center text-muted-foreground py-16">
-                  <Users className="mx-auto h-10 w-10 opacity-40 mb-2" />
-                  <p className="text-sm">{t("usersManagement.adminOnly")}</p>
+                            )}
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
-
+              </div>
             </div>
           )}
 
         </div>
       </div>
 
-      {/* MODALE CREAZIONE UTENTE (Admin) */}
+      {/* MODALE CREAZIONE UTENTE */}
       <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
         <DialogContent>
           <DialogHeader>
@@ -337,17 +520,52 @@ export default function SettingsPage() {
             <DialogDescription>{t("addUserModal.description")}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateUser} className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <Label>{t("addUserModal.nameLabel")}</Label>
-              <Input name="name" required placeholder="mario.rossi" />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t("addUserModal.firstNameLabel")}</Label>
+                <Input name="firstName" required />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("addUserModal.lastNameLabel")}</Label>
+                <Input name="lastName" required />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>{t("addUserModal.emailLabel")}</Label>
-              <Input name="email" type="email" required placeholder="mario@example.com" />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t("addUserModal.emailLabel")}</Label>
+                <Input name="email" type="email" required />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("addUserModal.roleLabel")}</Label>
+                {currentUserRole === "superuser" ? (
+                  <select 
+                    name="role" 
+                    required 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="user">{t("addUserModal.roleUser")}</option>
+                    <option value="admin">{t("addUserModal.roleAdmin")}</option>
+                  </select>
+                ) : (
+                  <>
+                    <Input value={t("addUserModal.roleUser")} disabled />
+                    <input type="hidden" name="role" value="user" />
+                  </>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>{t("addUserModal.passwordLabel")}</Label>
-              <Input name="password" type="password" required />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t("addUserModal.passwordLabel")}</Label>
+                <PasswordInput name="password" required />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("addUserModal.confirmPasswordLabel")}</Label>
+                <PasswordInput name="confirmPassword" required />
+              </div>
             </div>
 
             {userError && (
@@ -366,7 +584,7 @@ export default function SettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* MODALE ELIMINA UTENTE & MIGRAZIONE TRANSAZIONI */}
+      {/* MODALE ELIMINA UTENTE */}
       <Dialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
         <DialogContent>
           <DialogHeader>
@@ -381,45 +599,6 @@ export default function SettingsPage() {
               {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : t("deleteUserModal.confirm")}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* MODALE CAMBIO PASSWORD PERSONALE */}
-      <Dialog open={isPasswordModalOpen} onOpenChange={setIsPasswordModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("passwordModal.title")}</DialogTitle>
-            <DialogDescription>{t("passwordModal.description")}</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleChangePassword} className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <Label>{t("passwordModal.currentPassword")}</Label>
-              <Input name="currentPassword" type="password" required />
-            </div>
-            <div className="space-y-2">
-              <Label>{t("passwordModal.newPassword")}</Label>
-              <Input name="newPassword" type="password" required />
-            </div>
-
-            {passwordError && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md text-center">
-                {passwordError}
-              </div>
-            )}
-
-            {passwordSuccess && (
-              <div className="p-3 text-sm text-emerald-500 bg-emerald-500/10 rounded-md text-center">
-                {passwordSuccess}
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsPasswordModalOpen(false)}>{t("passwordModal.cancel")}</Button>
-              <Button type="submit" disabled={actionLoading}>
-                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : t("passwordModal.submit")}
-              </Button>
-            </DialogFooter>
-          </form>
         </DialogContent>
       </Dialog>
 

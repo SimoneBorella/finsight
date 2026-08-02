@@ -22,7 +22,15 @@
     "Travel & Holidays": "Viaggi e Vacanze",
     "Gifts": "Regali",
     "Culture": "Cultura",
-    "Other Wants": "Altri Svuoti / Sfizi"
+    "Other Wants": "Altri Svuoti / Sfizi",
+    "Income": "Entrate",
+    "Housing & Utilities": "Casa e Utenze",
+    "Car & Transport": "Auto e Trasporti",
+    "Daily Life": "Vita Quotidiana",
+    "Health & Hygiene": "Salute e Igiene",
+    "Miscellaneous": "Varie",
+    "Free Time": "Tempo Libero",
+    "Lifestyle": "Stile di Vita"
   },
   "Landing": {
     "titleHighlight": "Finanza Intelligente",
@@ -137,6 +145,7 @@
     "subtitle": "Gestisci le tue preferenze e impostazioni personali.",
     "tabs": {
       "categories": "Categorie",
+      "password": "Cambia Password",
       "users": "Utenti"
     },
     "changePassword": "Cambia Password",
@@ -144,7 +153,7 @@
       "title": "Gestione Utenti",
       "subtitle": "Aggiungi, rimuovi o gestisci i ruoli degli utenti del sistema.",
       "newUser": "Nuovo Utente",
-      "nameCol": "Nome (nome.cognome)",
+      "nameCol": "Username",
       "emailCol": "Email",
       "roleCol": "Ruolo",
       "actionsCol": "Azioni",
@@ -152,17 +161,25 @@
       "adminOnly": "Sezione riservata agli amministratori.",
       "removeAdmin": "Rimuovi Admin",
       "makeAdmin": "Promuovi Admin",
-      "nameFormatError": "Il nome utente deve essere nel formato nome.cognome (es. mario.rossi)"
+      "nameFormatError": "Il nome utente generato non è valido.",
+      "roleSuperuser": "Superuser",
+      "roleAdmin": "Admin",
+      "roleUser": "Utente"
     },
     "addUserModal": {
       "title": "Crea Nuovo Utente",
-      "description": "Inserisci i dati del nuovo account. Il nome deve essere nel formato nome.cognome.",
-      "nameLabel": "Nome (es. mario.rossi)",
+      "description": "Inserisci i dati. Il sistema genererà automaticamente l'username.",
+      "firstNameLabel": "Nome",
+      "lastNameLabel": "Cognome",
       "emailLabel": "Email",
+      "roleLabel": "Ruolo",
+      "roleUser": "Utente",
+      "roleAdmin": "Amministratore",
       "passwordLabel": "Password",
+      "confirmPasswordLabel": "Conferma Password",
       "cancel": "Annulla",
       "submit": "Crea Utente",
-      "saving": "Creazione...",
+      "passwordMismatch": "Le password non coincidono",
       "defaultError": "Errore durante la creazione dell'utente"
     },
     "deleteUserModal": {
@@ -180,6 +197,18 @@
       "submit": "Aggiorna Password",
       "success": "Password aggiornata con successo!",
       "defaultError": "Errore durante il cambio password"
+    },
+    "categoriesManagement": {
+      "title": "Gestione Categorie",
+      "subtitle": "Visualizza la struttura delle categorie suddivise per tipo e gruppo di budget.",
+      "incomeType": "Entrate",
+      "expenseType": "Uscite",
+      "noCategories": "Nessuna categoria trovata."
+    },
+    "budgetGroups": {
+      "needs": "Necessità",
+      "wants": "Svuoti / Sfizi",
+      "income": "Entrate"
     }
   },
   "AddTransactionModal": {
@@ -208,6 +237,12 @@
     "invalidCategory": "Categoria selezionata non valida.",
     "invalidId": "ID transazione non valido.",
     "notFound": "Transazione non trovata.",
-    "internalError": "Errore interno del server."
+    "internalError": "Errore interno del server.",
+    "invalidPassword": "La password attuale non è corretta.",
+    "passwordTooShort": "La nuova password deve contenere almeno 6 caratteri.",
+    "emailInUse": "Questa email è già associata a un account.",
+    "nameInUse": "Questo nome utente esiste già.",
+    "cannotDeleteSelf": "Non puoi eliminare il tuo stesso account.",
+    "cannotDeleteAdmin": "L'account amministratore principale non può essere eliminato."
   }
 }

@@ -24,21 +24,26 @@ interface Transaction {
   amount: number;
   currency: string;
   type: "income" | "expense";
-  category: string; // Nome della categoria in inglese salvato nel DB
+  category: string; 
   description: string;
   date: string;
+  userId?: string; // ID del proprietario
   userName?: string; 
 }
 
 export default function TransactionsPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter(); 
   
   const t = useTranslations("Transactions"); 
   const tErrors = useTranslations("ApiErrors");
-  const tCat = useTranslations("Categories"); // <-- Traduttore per le categorie
+  const tCat = useTranslations("Categories");
   const locale = useLocale(); 
   const dateLocale = locale === 'it' ? it : enUS; 
+
+  const currentUserId = (session?.user as any)?.id;
+  const currentUserRole = (session?.user as any)?.role;
+  const canManageOwnership = currentUserRole === "superuser" || currentUserRole === "admin";
   
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
   const [categories, setCategories] = React.useState<any[]>([]);
@@ -119,6 +124,9 @@ export default function TransactionsPage() {
       if (res.ok) {
         setTransactionToDelete(null);
         fetchTransactions(); 
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error ? tErrors(errorData.error) : "Errore durante l'eliminazione");
       }
     } finally {
       setActionLoading(false);
@@ -134,7 +142,7 @@ export default function TransactionsPage() {
     const formData = new FormData(e.currentTarget);
     const amountFloat = parseFloat(formData.get("amount") as string);
     
-    const payload = {
+    const payload: any = {
       amount: Math.round(amountFloat * 100), 
       currency: transactionToEdit.currency || "EUR",
       type: transactionToEdit.type,
@@ -142,6 +150,11 @@ export default function TransactionsPage() {
       description: formData.get("description"),
       date: formData.get("date"),
     };
+
+    // Se l'utente è superuser o admin, inviamo anche il nuovo proprietario se è stato cambiato
+    if (canManageOwnership) {
+      payload.newUserId = formData.get("newUserId");
+    }
 
     try {
       const res = await fetch(`/api/transactions/${transactionToEdit._id}`, {
@@ -251,31 +264,20 @@ export default function TransactionsPage() {
                 <TableRow key={tx._id}>
                   <TableCell className="font-medium whitespace-nowrap">{format(new Date(tx.date), "dd MMM yyyy", { locale: dateLocale })}</TableCell>
                   <TableCell className="whitespace-nowrap">{tx.userName}</TableCell>
-                  {/* <TableCell>
-                    <span className="inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold">
-                      {tCat.has(tx.category) ? tCat(tx.category) : tx.category}
-                    </span>
-                  </TableCell> */}
                   <TableCell>
                     {(() => {
-                      // Trova la categoria corrispondente per recuperare il colore dal DB
                       const currentCat = categories.find(c => c.name === tx.category);
-                      const catColor = currentCat?.color || "#64748b"; // Fallback grigio se non trovato
+                      const catColor = currentCat?.color || "#64748b"; 
 
                       return (
                         <span 
                           className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border"
                           style={{
-                            backgroundColor: `${catColor}15`, // Colore con trasparenza al ~10% per lo sfondo
-                            color: catColor,                 // Testo del colore pieno della categoria
-                            borderColor: `${catColor}30`,    // Bordo leggermente sfumato in tinta
+                            backgroundColor: `${catColor}15`, 
+                            color: catColor,             
+                            borderColor: `${catColor}30`,    
                           }}
                         >
-                          {/* Pallino colorato opzionale per enfatizzare */}
-                          {/* <span 
-                            className="h-1.5 w-1.5 rounded-full" 
-                            style={{ backgroundColor: catColor }} 
-                          /> */}
                           {tCat.has(tx.category) ? tCat(tx.category) : tx.category}
                         </span>
                       );
@@ -285,9 +287,26 @@ export default function TransactionsPage() {
                   <TableCell className={`text-right font-bold whitespace-nowrap ${tx.type === "expense" ? "text-destructive" : "text-emerald-500"}`}>
                     {tx.type === "expense" ? "-" : "+"}{formatCurrency(tx.amount, tx.currency)}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => { setTransactionToEdit(tx); setEditError(""); }}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setTransactionToDelete(tx._id)}><Trash2 className="h-4 w-4" /></Button>
+                  <TableCell className="text-right space-x-1">
+                    {(canManageOwnership || tx.userId === currentUserId) && (
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => { setTransactionToEdit(tx); setEditError(""); }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10" 
+                          onClick={() => setTransactionToDelete(tx._id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -350,6 +369,18 @@ export default function TransactionsPage() {
           {transactionToEdit && (
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-2">
               
+              {/* Selezione Proprietario (Visibile solo a Superuser e Admin) */}
+              {canManageOwnership && (
+                <div className="space-y-2">
+                  <Label>{t("filters.user", { default: "Utente / Proprietario" })}</Label>
+                  <select name="newUserId" defaultValue={transactionToEdit.userId} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    {users.map(u => (
+                      <option key={u._id} value={u._id}>{u.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>{t("editModal.amount")}</Label>
                 <Input name="amount" type="number" step="0.01" required defaultValue={(transactionToEdit.amount / 100).toFixed(2)} />
