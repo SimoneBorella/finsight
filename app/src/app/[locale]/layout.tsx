@@ -94,12 +94,13 @@ export default async function RootLayout({
                 >
                   <AppSidebar variant="inset" />
 
-                  <SidebarInset className="md:rounded-xl md:border md:my-2 md:mx-2 shadow-sm">
+                  <SidebarInset className="mx-0 my-0 border-0 rounded-none md:my-2 md:mx-2 md:rounded-xl md:border shadow-none md:shadow-sm">
                     <SiteHeader />
 
-                    <main className="flex-1 p-4 md:p-6">
+                    <main className="flex-1 px-1 py-4 md:p-6">
                       {children}
                     </main>
+
                   </SidebarInset>
                 </SidebarProvider>
               </ActiveThemeProvider>

@@ -10,20 +10,27 @@ import {
   Wallet, 
   PiggyBank, 
   ArrowRight, 
-  Calendar, 
-  PieChart as PieChartIcon, 
-  Loader2 
+  Activity,
+  Target,
+  BarChart3,
+  Layers,
+  Loader2,
+  PieChart
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
-  BarChart, 
-  Bar, 
+  AreaChart,
+  Area,
   XAxis, 
   YAxis, 
   Tooltip, 
-  Cell,
-  PieChart,
-  Pie
+  CartesianGrid,
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ReferenceLine
 } from "recharts";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +40,7 @@ interface Transaction {
   _id: string;
   amount: number;
   type: "income" | "expense";
-  category: string; // Nome in inglese salvato nel DB
+  category: string;
   date: string;
   currency: string;
 }
@@ -42,6 +49,8 @@ interface Category {
   _id: string;
   name: string;
   type: "income" | "expense";
+  parentCategory?: string;
+  budgetGroup?: string;
   color: string;
 }
 
@@ -50,34 +59,31 @@ export default function DashboardPage() {
   const router = useRouter();
   
   const t = useTranslations("Dashboard"); 
-  const tCat = useTranslations("Categories"); // <-- Traduttore per le categorie
+  const tCat = useTranslations("Categories");
   const locale = useLocale(); 
 
   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
-  const [categories, setCategories] = React.useState<Category[]>([]); // <-- Stato per le categorie dal DB
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "EUR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount / 100);
   };
 
-  // Caricamento transazioni e categorie dal database
   React.useEffect(() => {
     if (status === "authenticated") {
       Promise.all([
-        fetch("/api/transactions?skip=0&limit=500").then((res) => res.json()),
+        fetch("/api/transactions?limit=10000").then((res) => res.json()), 
         fetch("/api/categories").then((res) => res.json())
       ])
         .then(([txData, catData]) => {
-          if (txData && txData.transactions) {
-            setTransactions(txData.transactions);
-          }
-          if (Array.isArray(catData)) {
-            setCategories(catData);
-          }
+          if (txData && txData.transactions) setTransactions(txData.transactions);
+          if (Array.isArray(catData)) setCategories(catData);
         })
         .catch((err) => console.error("Errore caricamento dashboard:", err))
         .finally(() => setLoading(false));
@@ -92,248 +98,326 @@ export default function DashboardPage() {
     );
   }
 
-  // --- CALCOLI E STATISTICHE ---
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  // --- DEFINIZIONE FINESTRA 6 MESI (Termina al mese precedente a quello attuale) ---
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
 
-  const currentMonthTransactions = transactions.filter((tx) => {
+  const endOfPreviousMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+  
+  const sixMonthsData: { month: string; sortKey: string; net: number; startDate: Date; endDate: Date }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const startD = new Date(currentYear, currentMonth - 1 - i, 1);
+    const endD = new Date(currentYear, currentMonth - i, 0, 23, 59, 59, 999);
+    const monthKey = `${startD.toLocaleString(locale, { month: 'short' })} ${startD.getFullYear()}`;
+    const sortKey = `${startD.getFullYear()}-${String(startD.getMonth() + 1).padStart(2, '0')}`;
+    sixMonthsData.push({ month: monthKey, sortKey, net: 0, startDate: startD, endDate: endD });
+  }
+  
+  const sixMonthsAgo = sixMonthsData[0].startDate;
+
+  // --- CALCOLO AREA CHART (Bilancio Netto ultimi 6 mesi chiusi) ---
+  transactions.forEach((tx) => {
     const txDate = new Date(tx.date);
-    return txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear;
+    if (txDate >= sixMonthsAgo && txDate <= endOfPreviousMonth) {
+      const sortKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
+      const targetMonth = sixMonthsData.find(m => m.sortKey === sortKey);
+      if (targetMonth) {
+        targetMonth.net += (tx.type === "income" ? tx.amount : -tx.amount) / 100;
+      }
+    }
   });
 
-  const totalIncomeMonth = currentMonthTransactions
+  // --- CALCOLI METRICHE SOGGETTE AI 6 MESI CHIUSI ---
+  const sixMonthsTransactions = transactions.filter((tx) => {
+    const txDate = new Date(tx.date);
+    return txDate >= sixMonthsAgo && txDate <= endOfPreviousMonth;
+  });
+
+  const totalIncomeSixMonths = sixMonthsTransactions
     .filter((tx) => tx.type === "income")
     .reduce((acc, tx) => acc + tx.amount, 0);
 
-  const totalExpenseMonth = currentMonthTransactions
+  const totalExpenseSixMonths = sixMonthsTransactions
     .filter((tx) => tx.type === "expense")
     .reduce((acc, tx) => acc + tx.amount, 0);
 
-  const netSavingsMonth = totalIncomeMonth - totalExpenseMonth;
-  const savingsRate = totalIncomeMonth > 0 ? Math.max(0, Math.round((netSavingsMonth / totalIncomeMonth) * 100)) : 0;
+  const netSavingsSixMonths = totalIncomeSixMonths - totalExpenseSixMonths;
+  const savingsRateSixMonths = totalIncomeSixMonths > 0 ? Math.max(0, Math.round((netSavingsSixMonths / totalIncomeSixMonths) * 100)) : 0;
 
-  // Dati per il grafico a barre mensile
-  const monthlyDataMap: { [key: string]: { income: number; expense: number } } = {};
-  transactions.forEach((tx) => {
-    const date = new Date(tx.date);
-    const key = `${date.toLocaleString(locale, { month: 'short' })} ${date.getFullYear()}`;
-    if (!monthlyDataMap[key]) {
-      monthlyDataMap[key] = { income: 0, expense: 0 };
+  // --- CALCOLO RADAR CHART (Ultimi 6 mesi chiusi) ---
+  const radarMap: Record<string, { amount: number; budgetGroup: string }> = {};
+  
+  sixMonthsTransactions.forEach((tx) => {
+    if (tx.type === "expense") {
+      const catObj = categories.find((c) => c.name === tx.category);
+      const parentCat = catObj?.parentCategory || catObj?.name || "Varie";
+      const budgetGroup = catObj?.budgetGroup === "Needs" ? "Needs" : "Wants";
+
+      if (!radarMap[parentCat]) {
+        radarMap[parentCat] = { amount: 0, budgetGroup };
+      }
+      radarMap[parentCat].amount += (tx.amount / 100);
     }
-    if (tx.type === "income") monthlyDataMap[key].income += tx.amount / 100;
-    if (tx.type === "expense") monthlyDataMap[key].expense += tx.amount / 100;
   });
 
-  const barChartData = Object.keys(monthlyDataMap).slice(-6).map((month) => ({
-    month,
-    [t("income")]: monthlyDataMap[month].income,
-    [t("expenses")]: monthlyDataMap[month].expense,
-  }));
-
-  // Dati per il grafico a torta con nome localizzato e colore estratto dal DB
-  const categoryMap: { [key: string]: { amount: number; color: string } } = {};
-  
-  currentMonthTransactions
-    .filter((tx) => tx.type === "expense")
-    .forEach((tx) => {
-      // Cerca la categoria nel database per estrarre il colore reale
-      const categoryObj = categories.find((c) => c.name === tx.category);
-      const color = categoryObj?.color || "#94a3b8"; // Fallback grigio se non trovata
-      
-      // Traduciamo il nome della categoria tramite tCat
-      const localizedCategoryName = tCat.has(tx.category) ? tCat(tx.category) : tx.category;
-
-      if (!categoryMap[localizedCategoryName]) {
-        categoryMap[localizedCategoryName] = { amount: 0, color };
-      }
-      categoryMap[localizedCategoryName].amount += tx.amount / 100;
-    });
-
-  const pieChartData = Object.keys(categoryMap).map((name) => ({
-    name,
-    value: categoryMap[name].amount,
-    color: categoryMap[name].color,
-  }));
+  const radarData = Object.entries(radarMap)
+    .sort((a, b) => b[1].amount - a[1].amount) 
+    .slice(0, 7)
+    .sort((a, b) => {
+      if (a[1].budgetGroup === "Needs" && b[1].budgetGroup !== "Needs") return -1;
+      if (a[1].budgetGroup !== "Needs" && b[1].budgetGroup === "Needs") return 1;
+      return b[1].amount - a[1].amount; 
+    })
+    .map(([catName, data]) => ({
+      category: tCat.has(catName) ? tCat(catName) : catName,
+      amount: data.amount,
+      budgetGroup: data.budgetGroup, 
+    }));
 
   return (
-    <div className="@container/main flex flex-col gap-8 py-6 px-4 md:px-6 pb-24 min-h-[calc(100dvh-var(--header-height)-4rem)]">
+    <div className="@container/main flex flex-col gap-8 py-6 px-2 sm:px-2 md:px-6 pb-24 min-h-[calc(100dvh-var(--header-height)-4rem)]">
       
-      {/* HEADER & WELCOME */}
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
+        <AddTransactionModal />
       </div>
 
-      {/* KPI CARDS */}
+      {/* KPI CARDS (Ultimi 6 mesi chiusi) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between">
+        <div 
+          onClick={() => router.push("/cash-flow")}
+          className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between cursor-pointer hover:border-primary/50 transition-colors group"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">{t("incomeMonth")}</span>
+            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{t("incomeMonth")}</h3>
             <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
               <TrendingUp className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-emerald-500">{formatCurrency(totalIncomeMonth)}</div>
+            <div className="text-2xl font-bold text-emerald-500">{formatCurrency(totalIncomeSixMonths)}</div>
             <p className="text-xs text-muted-foreground mt-1">{t("incomeUpdated")}</p>
           </div>
         </div>
 
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between">
+        <div 
+          onClick={() => router.push("/trends")}
+          className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between cursor-pointer hover:border-primary/50 transition-colors group"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">{t("expenseMonth")}</span>
+            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{t("expenseMonth")}</h3>
             <div className="p-2 bg-destructive/10 rounded-lg text-destructive">
               <TrendingDown className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenseMonth)}</div>
+            <div className="text-2xl font-bold text-destructive">{formatCurrency(totalExpenseSixMonths)}</div>
             <p className="text-xs text-muted-foreground mt-1">{t("expenseTotal")}</p>
           </div>
         </div>
 
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between">
+        <div 
+          onClick={() => router.push("/wealth")}
+          className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between cursor-pointer hover:border-primary/50 transition-colors group"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">{t("netBalance")}</span>
+            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{t("netBalance")}</h3>
             <div className="p-2 bg-primary/10 rounded-lg text-primary">
               <Wallet className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-4">
-            <div className={`text-2xl font-bold ${netSavingsMonth >= 0 ? "text-foreground" : "text-destructive"}`}>
-              {formatCurrency(netSavingsMonth)}
+            <div className={`text-2xl font-bold ${netSavingsSixMonths >= 0 ? "text-foreground" : "text-destructive"}`}>
+              {formatCurrency(netSavingsSixMonths)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">{t("netDifference")}</p>
           </div>
         </div>
 
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between">
+        <div 
+          onClick={() => router.push("/wealth")}
+          className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between cursor-pointer hover:border-primary/50 transition-colors group"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">{t("savingsRate")}</span>
+            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{t("savingsRate")}</h3>
             <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
               <PiggyBank className="h-5 w-5" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-foreground">{savingsRate}%</div>
+            <div className="text-2xl font-bold text-foreground">{savingsRateSixMonths}%</div>
             <p className="text-xs text-muted-foreground mt-1">{t("savingsCapital")}</p>
           </div>
         </div>
 
       </div>
 
-      {/* SEZIONE GRAFICI */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* SEZIONE GRAFICI (Area Chart & Radar) */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
-        {/* Grafico a Barre */}
+        {/* Radar Chart: Impronta di Spesa */}
         <div className="lg:col-span-2 p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="font-semibold text-lg">{t("trendTitle")}</h3>
-              <p className="text-xs text-muted-foreground">{t("trendSubtitle")}</p>
+              <h3 className="font-semibold text-lg">{t("radarTitle")}</h3>
+              <p className="text-xs text-muted-foreground">{t("radarSubtitle")}</p>
             </div>
-            <Calendar className="h-5 w-5 text-muted-foreground" />
+            <Target className="h-5 w-5 text-muted-foreground opacity-50" />
           </div>
           
-          <div className="h-[300px] w-full mt-4">
-            {barChartData.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                {t("noChartData")}
-              </div>
+          <div className="flex-1 min-h-[280px] w-full flex flex-col items-center justify-center mt-4 pb-2">
+            {radarData.length === 0 ? (
+              <div className="text-muted-foreground text-sm text-center">{t("noChartData")}</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barChartData}>
-                  <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `€${value}`} />
-                  <Tooltip formatter={(value: any) => [`€${Number(value).toFixed(2)}`, '']} />
-                  <Bar dataKey={t("income")} fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey={t("expenses")} fill="#ef4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
+                  <PolarGrid strokeOpacity={0.2} />
+                  
+                  <PolarAngleAxis 
+                    dataKey="category" 
+                    tick={(props: any) => {
+                      const { payload, x, y, textAnchor } = props;
+                      const isNeed = radarData.find(d => d.category === payload.value)?.budgetGroup === "Needs";
+                      return (
+                        <text
+                          x={x}
+                          y={y}
+                          textAnchor={textAnchor}
+                          fill={isNeed ? "#ef4444" : "#f59e0b"}
+                          className="text-[11px] font-bold"
+                          dominantBaseline="central"
+                        >
+                          {payload.value}
+                        </text>
+                      );
+                    }} 
+                  />
+                  
+                  <PolarRadiusAxis angle={30} domain={[0, 'dataMax']} tick={false} axisLine={false} />
+                  <Tooltip 
+                    formatter={(value: any) => [`€${Number(value).toFixed(0)}`, t("amount")]}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Radar name="Spese" dataKey="amount" stroke="#f97316" strokeWidth={2} fill="#f97316" fillOpacity={0.45} />
+                </RadarChart>
               </ResponsiveContainer>
             )}
           </div>
-        </div>
-
-        {/* Grafico a Torta con colori dinamici del DB */}
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-lg">{t("categoryTitle")}</h3>
-              <p className="text-xs text-muted-foreground">{t("categorySubtitle")}</p>
+          
+          <div className="flex items-center justify-center gap-6 mt-2 pt-4 border-t">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span>
+              {t("needsArea")}
             </div>
-            <PieChartIcon className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>
+              {t("wantsArea")}
+            </div>
           </div>
+        </div>
 
-          <div className="h-[240px] w-full flex items-center justify-center">
-            {pieChartData.length === 0 ? (
-              <div className="text-muted-foreground text-sm text-center">
-                {t("noCategoryData")}
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: any) => [`€${Number(value).toFixed(2)}`, t("amount")]} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+        {/* Area Chart: Trend Bilancio Netto (Mesi) */}
+        <div className="lg:col-span-3 p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="font-semibold text-lg">{t("netTrendTitle")}</h3>
+              <p className="text-xs text-muted-foreground">{t("netTrendSubtitle")}</p>
+            </div>
+            <Activity className="h-5 w-5 text-muted-foreground opacity-50" />
           </div>
-
-          <div className="mt-2 flex flex-wrap gap-2 justify-center max-h-24 overflow-y-auto">
-            {pieChartData.map((entry) => (
-              <div key={entry.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }}></span>
-                <span>{entry.name}</span>
-              </div>
-            ))}
+          
+          <div className="flex-1 min-h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={sixMonthsData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `€${val}`} />
+                <Tooltip 
+                  formatter={(value: any) => [`€${Number(value).toFixed(2)}`, t("netBalance")]}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                />
+                <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
+                <Area 
+                  type="monotone" 
+                  dataKey="net" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorNet)" 
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
       </div>
 
-      {/* SEZIONE AZIONI RAPIDE */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h4 className="font-semibold">{t("analyzeTitle")}</h4>
-            <p className="text-sm text-muted-foreground">{t("analyzeSubtitle")}</p>
-          </div>
-          <Button variant="outline" onClick={() => router.push("/transactions")} className="w-full sm:w-auto shrink-0">
-            {t("historyButton")}
-            <ArrowRight className="ml-2 h-4 w-4" />
+      {/* QUICK LINKS DI NAVIGAZIONE */}
+      <div>
+        <h3 className="font-semibold text-lg mb-4">{t("quickLinksTitle")}</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          
+          <Button 
+            variant="outline" 
+            className="h-auto flex-col items-start gap-2 p-4 text-left hover:border-primary hover:bg-primary/5 transition-all"
+            onClick={() => router.push("/cash-flow")}
+          >
+            <Layers className="h-5 w-5 text-emerald-500" />
+            <span className="font-semibold mt-2">{t("linkCashFlow")}</span>
           </Button>
-        </div>
 
-        <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h4 className="font-semibold">{t("annotationsTitle")}</h4>
-            <p className="text-sm text-muted-foreground">{t("annotationsSubtitle")}</p>
-          </div>
-          <Button variant="outline" onClick={() => router.push("/annotations")} className="w-full sm:w-auto shrink-0">
-            {t("annotationsButton")}
-            <ArrowRight className="ml-2 h-4 w-4" />
+          <Button 
+            variant="outline" 
+            className="h-auto flex-col items-start gap-2 p-4 text-left hover:border-primary hover:bg-primary/5 transition-all"
+            onClick={() => router.push("/trends")}
+          >
+            <BarChart3 className="h-5 w-5 text-blue-500" />
+            <span className="font-semibold mt-2">{t("linkTrends")}</span>
           </Button>
-        </div>
 
+          <Button 
+            variant="outline" 
+            className="h-auto flex-col items-start gap-2 p-4 text-left hover:border-primary hover:bg-primary/5 transition-all"
+            onClick={() => router.push("/category-stats")}
+          >
+            <PieChart className="h-5 w-5 text-purple-500" />
+            <span className="font-semibold mt-2">{t("linkCategoryStats")}</span>
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-auto flex-col items-start gap-2 p-4 text-left hover:border-primary hover:bg-primary/5 transition-all"
+            onClick={() => router.push("/wealth")}
+          >
+            <PiggyBank className="h-5 w-5 text-amber-500" />
+            <span className="font-semibold mt-2">{t("linkWealth")}</span>
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-auto flex-col items-start gap-2 p-4 text-left hover:border-primary hover:bg-primary/5 transition-all"
+            onClick={() => router.push("/transactions")}
+          >
+            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+            <span className="font-semibold mt-2">{t("linkTransactions")}</span>
+          </Button>
+
+        </div>
       </div>
 
-      <AddTransactionModal />
     </div>
   );
 }

@@ -4,9 +4,9 @@ services:
     container_name: finsight-database
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: finsight_admin
-      MONGO_INITDB_ROOT_PASSWORD: finsight_password
-      MONGO_INITDB_DATABASE: finsight_db
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     ports:
       - "27017:27017"
     volumes:
@@ -23,11 +23,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      MONGODB_URI: mongodb://finsight_admin:finsight_password@finsight-db:27017/finsight_db?authSource=admin
-      NEXTAUTH_URL: http://borella-laptop-ubuntu:3000
-      NEXTAUTH_SECRET: my_super_super_super_super_super_secret_key_finsight_12345
-      # NODE_ENV: production
-      NODE_ENV: development
+      MONGODB_URI: ${MONGODB_URI}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NODE_ENV: ${NODE_ENV}
     depends_on:
       - finsight-db
     networks:

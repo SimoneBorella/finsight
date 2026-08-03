@@ -6,7 +6,7 @@ import { useRouter } from "@/i18n/routing";
 import { useTranslations, useLocale } from "next-intl"; 
 import { format } from "date-fns";
 import { it, enUS } from "date-fns/locale"; 
-import { ChevronLeft, ChevronRight, Loader2, FilterX, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, FilterX, Pencil, Trash2, Languages } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ interface Transaction {
   category: string; 
   description: string;
   date: string;
-  userId?: string; // ID del proprietario
+  userId?: string; 
   userName?: string; 
 }
 
@@ -66,6 +66,10 @@ export default function TransactionsPage() {
   const [transactionToEdit, setTransactionToEdit] = React.useState<Transaction | null>(null);
   const [actionLoading, setActionLoading] = React.useState(false);
   const [editError, setEditError] = React.useState("");
+
+  // Stati Traduzione
+  const [translatedDescriptions, setTranslatedDescriptions] = React.useState<Record<string, string>>({});
+  const [isTranslating, setIsTranslating] = React.useState<Record<string, boolean>>({});
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat(locale, {
@@ -151,7 +155,6 @@ export default function TransactionsPage() {
       date: formData.get("date"),
     };
 
-    // Se l'utente è superuser o admin, inviamo anche il nuovo proprietario se è stato cambiato
     if (canManageOwnership) {
       payload.newUserId = formData.get("newUserId");
     }
@@ -184,6 +187,40 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleTranslateDescription = async (txId: string, text: string) => {
+    setIsTranslating((prev) => ({ ...prev, [txId]: true }));
+    
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, targetLanguage: locale }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        if (data.sameLanguage) {
+          return;
+        }
+
+        if (data.translatedText) {
+          const decodedText = data.translatedText
+            .replace(/&#39;/g, "'")
+            .replace(/&quot;/g, '"');
+
+          setTranslatedDescriptions((prev) => ({ ...prev, [txId]: decodedText }));
+        }
+      } else {
+        console.error("Errore traduzione");
+      }
+    } catch (err) {
+      console.error("Errore di rete durante la traduzione", err);
+    } finally {
+      setIsTranslating((prev) => ({ ...prev, [txId]: false }));
+    }
+  };
+
   if (status === "loading" || status === "unauthenticated") {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -195,8 +232,11 @@ export default function TransactionsPage() {
   const filteredCategories = typeFilter ? categories.filter(c => c.type === typeFilter) : categories;
 
   return (
-    <div className="@container/main flex flex-col gap-6 py-6 px-4 md:px-6 pb-24 min-h-[calc(100dvh-var(--header-height)-4rem)]">
-      <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+    // MODIFICATO: px-1 su mobile per sfruttare al massimo lo spazio laterale esattamente come la dashboard
+    <div className="@container/main flex flex-col gap-6 py-4 px-1 sm:px-3 md:px-6 pb-24 min-h-[calc(100dvh-var(--header-height)-4rem)]">
+      <div className="px-2 sm:px-0">
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+      </div>
 
       {/* BARRA DEI FILTRI */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-6 p-4 rounded-md border bg-card text-card-foreground shadow-sm items-end">
@@ -283,7 +323,36 @@ export default function TransactionsPage() {
                       );
                     })()}
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{tx.description || "-"}</TableCell>
+                  
+                  <TableCell className="max-w-[200px] group">
+                    {tx.description ? (
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate" title={tx.description}>{tx.description}</span>
+                          
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10"
+                            onClick={() => handleTranslateDescription(tx._id, tx.description)}
+                            disabled={isTranslating[tx._id]}
+                            title={t("table.translate", { default: "Traduci" })}
+                          >
+                            {isTranslating[tx._id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Languages className="h-3.5 w-3.5" />}
+                          </Button>
+                        </div>
+                        
+                        {translatedDescriptions[tx._id] && (
+                          <span className="text-xs text-muted-foreground italic whitespace-normal border-l-2 border-primary/30 pl-2">
+                            {translatedDescriptions[tx._id]}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+
                   <TableCell className={`text-right font-bold whitespace-nowrap ${tx.type === "expense" ? "text-destructive" : "text-emerald-500"}`}>
                     {tx.type === "expense" ? "-" : "+"}{formatCurrency(tx.amount, tx.currency)}
                   </TableCell>
@@ -369,7 +438,6 @@ export default function TransactionsPage() {
           {transactionToEdit && (
             <form onSubmit={handleEditSubmit} className="space-y-4 pt-2">
               
-              {/* Selezione Proprietario (Visibile solo a Superuser e Admin) */}
               {canManageOwnership && (
                 <div className="space-y-2">
                   <Label>{t("filters.user", { default: "Utente / Proprietario" })}</Label>

@@ -10,13 +10,19 @@
     "Insurance & Taxes": "Insurance & Taxes",
     "Car Maintenance": "Car Maintenance",
     "Public Transport & Parking": "Public Transport & Parking",
+    "Car Purchase": "Car Purchase",
     "Groceries": "Groceries",
     "Basic Clothing": "Basic Clothing",
     "Medical Expenses": "Medical Expenses",
     "Personal Care": "Personal Care",
+    "Taxes": "Taxes",
+    "Fines": "Fines",
+    "General Insurance": "General Insurance",
     "Other Needs": "Other Needs",
     "Restaurants & Bars": "Restaurants & Bars",
     "Entertainment & Games": "Entertainment & Games",
+    "Subscriptions": "Subscriptions",
+    "Concerts & Festivals": "Concerts & Festivals",
     "Hobbies & Music": "Hobbies & Music",
     "Sports": "Sports",
     "Travel & Holidays": "Travel & Holidays",
@@ -45,6 +51,10 @@
   "Sidebar": {
     "dashboard": "Dashboard",
     "transactions": "Transactions",
+    "cashFlow": "Cash Flow",
+    "trends": "Expense Trends",
+    "wealth": "Wealth",
+    "categoryStats": "Category Statistics",
     "annotations": "Annotations",
     "settings": "Settings"
   },
@@ -58,31 +68,31 @@
     "signInButton": "Sign In"
   },
   "Dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Here are the key insights on your finances for the current month.",
-    "incomeMonth": "Income (Month)",
-    "incomeUpdated": "Updated to this month",
-    "expenseMonth": "Expenses (Month)",
-    "expenseTotal": "Total expenses recorded",
+    "title": "Control Panel",
+    "subtitle": "Monitoring and telemetry of your personal finances.",
+    "incomeMonth": "Income",
+    "incomeUpdated": "Previous 6 months",
+    "expenseMonth": "Expenses",
+    "expenseTotal": "Previous 6 months",
     "netBalance": "Net Balance",
-    "netDifference": "Income/expense difference",
+    "netDifference": "Previous 6 months",
     "savingsRate": "Savings Rate",
-    "savingsCapital": "Share of capital retained",
-    "trendTitle": "Income vs Expenses Trend",
-    "trendSubtitle": "Monthly comparison of recent periods",
-    "noChartData": "No data available for the chart",
-    "categoryTitle": "Expenses by Category",
-    "categorySubtitle": "Distribution of the current month",
-    "noCategoryData": "No expenses recorded this month.",
-    "analyzeTitle": "Want to analyze specific transactions?",
-    "analyzeSubtitle": "Filter by date, user or category in the full history.",
-    "historyButton": "Transaction History",
-    "annotationsTitle": "Annotations Management",
-    "annotationsSubtitle": "Write down reminders or ideas related to your expenses.",
-    "annotationsButton": "Open Annotations",
-    "income": "Income",
-    "expenses": "Expenses",
-    "amount": "Amount"
+    "savingsCapital": "Previous 6 months",
+    "radarTitle": "Expense Footprint",
+    "radarSubtitle": "Needs vs Wants composition over the last 6 months.",
+    "netTrendTitle": "Net Balance Trend",
+    "netTrendSubtitle": "Chronological history of the last 6 months.",
+    "needsArea": "Needs",
+    "wantsArea": "Wants",
+    "quickLinksTitle": "Data Exploration",
+    "linkCashFlow": "Analyze Flow",
+    "linkTrends": "Explore Trends",
+    "linkWealth": "Wealth",
+    "linkCategoryStats": "Category Stats",
+    "linkTransactions": "History",
+    "noChartData": "Insufficient data for chart",
+    "amount": "Amount",
+    "lastSixMonths": "Previous 6 months"
   },
   "Transactions": {
     "title": "Transaction History",
@@ -106,7 +116,8 @@
       "description": "Description",
       "amount": "Amount",
       "actions": "Actions",
-      "noTransactions": "No transactions found."
+      "noTransactions": "No transactions found.",
+      "translate": "Translate"
     },
     "pagination": {
       "showing": "Showing {start}-{end} of {total} transactions",
@@ -131,6 +142,137 @@
       "networkError": "A network or system error occurred."
     },
     "accessDenied": "Access denied."
+  },
+  "CashFlow": {
+    "title": "Waterfall Cash Flow",
+    "subtitle": "Discover how your income is consumed in relation to the period.",
+    "filters": {
+      "periodLabel": "Period",
+      "selectPeriod": "Select period",
+      "currentMonth": "Current Month",
+      "currentYear": "Current Year",
+      "customPeriod": "Custom...",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "granularityLabel": "Level of detail",
+      "macro": "Macro (Needs / Wants)",
+      "intermediate": "Intermediate (Parent Categories)",
+      "detailed": "Detailed (Single Categories)",
+      "allTime": "All time",
+      "last6Months": "Last 6 Months"
+    },
+    "chart": {
+      "titleMonthly": "Monthly Waterfall",
+      "titleYearly": "Yearly Waterfall",
+      "titleDefault": "Waterfall",
+      "subtitle": "Visual analysis of the erosion of your income towards net savings.",
+      "titleAll": "All-time Waterfall"
+    },
+    "breakdown": {
+      "income": "Income",
+      "needs": "Needs",
+      "wants": "Wants",
+      "savings": "Savings",
+      "noData": "No data",
+      "savingsPositive": "This is the net amount you managed to save this period.",
+      "savingsNegative": "Warning: your expenses exceeded your income this period."
+    }
+  },
+  "Trends": {
+    "title": "Expense Trends",
+    "subtitle": "Analyze the evolution of your finances in the short and long term.",
+    "tabs": {
+      "monthly": "Monthly Trends",
+      "yearly": "Yearly Trends"
+    },
+    "monthlyView": {
+      "title": "Monthly Analysis",
+      "description": "Comparison of key metrics calculated month by month."
+    },
+    "yearlyView": {
+      "title": "Yearly Analysis",
+      "description": "Macroscopic year-over-year overview."
+    },
+    "charts": {
+      "incomeVsExpense": "Total Income vs Expenses",
+      "savingsRate": "Savings Rate (%)",
+      "expenseComposition": "Expense Composition (Needs vs Wants)",
+      "netBalance": "Net Balance Trend",
+      "netBalanceDesc": "View the net balance (Income - Expenses) over time."
+    },
+    "labels": {
+      "income": "Income",
+      "expenses": "Expenses",
+      "needs": "Needs",
+      "wants": "Wants",
+      "savings": "Savings",
+      "savingsRate": "Savings Rate",
+      "noData": "Not enough data to process trends."
+    }
+  },
+  "Wealth": {
+    "title": "Wealth Accumulation",
+    "subtitle": "Track the historical growth of your savings, based on all your transactions.",
+    "filters": {
+      "viewLabel": "View",
+      "selectPeriod": "Select period",
+      "allTime": "All time",
+      "last6Months": "Last 6 Months",
+      "currentMonth": "Current Month",
+      "currentYear": "Current Year",
+      "customPeriod": "Custom...",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "savingsGoal": "Savings Goal (€)"
+    },
+    "chart": {
+      "title": "Historical Accumulation Curve",
+      "subtitle": "The chart value always reflects the total real wealth.",
+      "tooltip": "Real Wealth",
+      "goalLine": "Total Goal"
+    },
+    "stats": {
+      "totalWealth": "Total Wealth",
+      "periodVariation": "Visible period variation:",
+      "goalReached": "🎉 Global goal reached!",
+      "goalRemaining": "€{amount} left to reach the goal",
+      "noData": "No data recorded so far."
+    }
+  },
+  "CategoryStats": {
+    "title": "Category Statistical Analysis",
+    "subtitle": "Advanced metrics, monthly averages, standard deviation, and expense variability.",
+    "filters": {
+      "periodLabel": "Analysis Period",
+      "allTime": "All time",
+      "last6Months": "Last 6 Months",
+      "currentMonth": "Current month",
+      "currentYear": "Current year",
+      "customPeriod": "Custom",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "granularityLabel": "Category Granularity",
+      "macro": "Macro Group (Needs / Wants)",
+      "intermediate": "Intermediate Category (Parent)",
+      "detailed": "Detailed (Category Name)"
+    },
+    "table": {
+      "category": "Category",
+      "group": "Group",
+      "totalSpent": "Total Spent",
+      "share": "% of Total",
+      "monthlyAvg": "Monthly Avg",
+      "stdDev": "Std. Deviation",
+      "volatility": "Volatility",
+      "transactionsCount": "Tx Count",
+      "noData": "No expenses found for the selected filters."
+    },
+    "cards": {
+      "totalCategories": "Active Categories",
+      "topCategory": "Top Expense",
+      "mostVolatile": "Most Volatile",
+      "avgMonthlyExpense": "Avg Monthly Expense"
+    }
   },
   "Annotations": {
     "title": "Annotations",

@@ -13,16 +13,33 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator
+  SidebarSeparator,
+  useSidebar
 } from "@/components/ui/sidebar"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { status } = useSession();
+  
+  // 1. Estraiamo anche "open" (lo stato attuale su desktop)
+  const { isMobile, setOpenMobile, open } = useSidebar(); 
+
+  // 2. SINCRONIZZAZIONE INFALLIBILE DEL COOKIE
+  // Ogni volta che "open" cambia, forziamo il salvataggio del cookie per tutto il dominio.
+  React.useEffect(() => {
+    document.cookie = `sidebar:state=${open}; path=/; max-age=31536000`;
+  }, [open]);
 
   // Se l'utente non è autenticato, non mostriamo/rendiamo attiva la sidebar
   if (status !== "authenticated") {
     return null;
   }
+
+  // Funzione helper per chiudere la sidebar solo se siamo su mobile
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="offcanvas" className="overflow-x-hidden" {...props}>
@@ -33,7 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-2 h-auto w-full hover:bg-transparent"
             >
-              <Link href="/" className="flex items-center w-full overflow-hidden">
+              <Link href="/" onClick={handleLinkClick} className="flex items-center w-full overflow-hidden">
                 <span className="font-extrabold tracking-tight text-5xl inline-block bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent leading-normal">
                   FinSight
                 </span> 
@@ -42,7 +59,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="overflow-x-hidden">
+      
+      <SidebarContent className="overflow-x-hidden" onClick={handleLinkClick}>
         <NavMain />
         <NavSecondary className="mt-auto" />
         <SidebarSeparator className="mx-2" />

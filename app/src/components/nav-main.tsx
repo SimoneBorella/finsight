@@ -1,6 +1,13 @@
 "use client"
 
-import { IconDashboard, IconTransactionEuro } from "@tabler/icons-react"
+import { 
+  IconDashboard, 
+  IconTransactionEuro, 
+  IconChartBar, 
+  IconTrendingUp, 
+  IconPigMoney,
+  IconChartPie
+} from "@tabler/icons-react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/routing"
 
@@ -25,6 +32,26 @@ export function NavMain() {
       title: t("transactions"),
       url: "/transactions",
       icon: IconTransactionEuro,
+    },
+    {
+      title: t("cashFlow"),
+      url: "/cash-flow",
+      icon: IconChartBar,
+    },
+    {
+      title: t("trends"),
+      url: "/trends",
+      icon: IconTrendingUp,
+    },
+    {
+      title: t("categoryStats"),
+      url: "/category-stats",
+      icon: IconChartPie,
+    },
+    {
+      title: t("wealth"),
+      url: "/wealth",
+      icon: IconPigMoney,
     },
   ];
 

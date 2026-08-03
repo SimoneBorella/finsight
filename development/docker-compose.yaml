@@ -1,0 +1,45 @@
+services:
+  finsight-db:
+    image: mongo:8.0
+    container_name: finsight-database
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    ports:
+      - "27017:27017"
+    volumes:
+      - finsight_db_data:/data/db
+    networks:
+      - finsight-network
+
+  finsight-app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: finsight-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NODE_ENV: ${NODE_ENV}
+    depends_on:
+      - finsight-db
+    networks:
+      - finsight-network
+    # Volumes for development
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+
+volumes:
+  finsight_db_data:
+    driver: local
+
+networks:
+  finsight-network:
+    driver: bridge
