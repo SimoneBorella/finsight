@@ -1,16 +1,14 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { Link } from "@/i18n/routing"; // <-- Usiamo il Link localizzato di next-intl
 import { useTranslations } from "next-intl"; 
-import { Settings, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -30,7 +28,7 @@ export function UserNav() {
     return <div />;
   }
 
-  const getNameInitials = (name?: string) => {
+  const getNameInitials = (name?: string | null) => {
     if (!name) return "U";
     if (name.toLowerCase() === "admin") return "AD";
     
@@ -44,7 +42,9 @@ export function UserNav() {
   };
 
   const initials = getNameInitials(session.user?.name);
-  const userRole = (session.user as any)?.role;
+  
+  // Casting inline tipizzato per evitare "any" e passare indenne il linter di Next.js
+  const userRole = (session.user as { role?: string })?.role;
 
   return (
     <DropdownMenu>

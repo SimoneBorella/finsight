@@ -5,7 +5,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  /* qui vanno le tue eventuali configurazioni di Next.js (se ne hai) */
+  output: "standalone",
+  /* qui vanno le tue eventuali configurazioni di Next.js */
 };
 
 export default withNextIntl(nextConfig);

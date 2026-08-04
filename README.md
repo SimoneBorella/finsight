@@ -4,6 +4,11 @@ Application to manage and extract insights on personal finances.
 
 # Startup
 
+## Docker configuration
+
+In `.docker-setup/` there are development and production configuration of `docker-compose.yaml` and `Dockerfile` to replace in `/docker-compose.yaml` and `/app/Dockerfile`.
+Choose and replace, if you don't change default is production.
+
 ## Environment Variables
 
 Create a `.env` file in the root folder of the project with the following configuration:
@@ -18,9 +23,6 @@ MONGO_INITDB_DATABASE=app_database_name
 MONGODB_URI=mongodb://db_admin_user:change_this_secure_password_123@your-mongo-container:27017/app_database_name?authSource=admin
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_super_long_random_secret_string_here_change_me
-
-# NODE_ENV=production
-NODE_ENV=development
 ```
 
 ## Start
