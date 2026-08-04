@@ -31,7 +31,6 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     const currentUserRole = (session?.user as any)?.role;
     
-    // Solo superuser o admin possono creare account
     if (!session || (currentUserRole !== "superuser" && currentUserRole !== "admin")) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
@@ -43,12 +42,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "missingData" }, { status: 400 });
     }
 
-    // SICUREZZA RUOLI
-    // Nessuno può creare un superuser
     if (role === "superuser") {
       return NextResponse.json({ error: "unauthorized" }, { status: 403 });
     }
-    // Se a creare è un admin, forziamo il ruolo del nuovo utente a "user"
     if (currentUserRole === "admin") {
       role = "user";
     }

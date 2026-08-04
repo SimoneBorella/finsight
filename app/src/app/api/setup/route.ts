@@ -8,21 +8,19 @@ export async function GET() {
     await client.connect();
     const db = client.db("finsight_db");
 
-    // Controllo di sicurezza: se esistono già utenti, fermiamo tutto
     const usersCount = await db.collection("users").countDocuments();
     if (usersCount > 0) {
       await client.close();
       return NextResponse.json({ message: "Setup already completed. Existing users." }, { status: 403 });
     }
 
-    // Creiamo l'admin
     const hashedPassword = await bcrypt.hash("admin", 10);
     
     await db.collection("users").insertOne({
       name: "admin",
       email: "admin@finsight.local",
       password_hash: hashedPassword,
-      role: "admin",
+      role: "superuser",
       created_at: new Date(),
     });
 

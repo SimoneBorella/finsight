@@ -26,7 +26,6 @@ export async function DELETE(
     await client.connect();
     const db = client.db("finsight_db");
 
-    // 1. Cerchiamo la transazione per verificare i permessi
     const transaction = await db.collection("transactions").findOne({ _id: new ObjectId(id) });
 
     if (!transaction) {
@@ -34,7 +33,6 @@ export async function DELETE(
       return NextResponse.json({ error: "notFound" }, { status: 404 });
     }
 
-    // 2. Controllo permessi: Se è un utente standard, può eliminare solo le proprie spese
     if (userRole === "user" && transaction.userId !== userId) {
       await client.close();
       return NextResponse.json({ error: "unauthorized" }, { status: 403 });
@@ -88,14 +86,12 @@ export async function PUT(
     await client.connect();
     const db = client.db("finsight_db");
 
-    // 1. Verifichiamo che la transazione esista
     const transaction = await db.collection("transactions").findOne({ _id: new ObjectId(id) });
     if (!transaction) {
       await client.close();
       return NextResponse.json({ error: "notFound" }, { status: 404 });
     }
 
-    // 2. Controllo permessi: Gli user standard possono modificare solo le proprie
     if (currentUserRole === "user" && transaction.userId !== currentUserId) {
       await client.close();
       return NextResponse.json({ error: "unauthorized" }, { status: 403 });
@@ -107,8 +103,6 @@ export async function PUT(
       return NextResponse.json({ error: "invalidCategory" }, { status: 400 });
     }
 
-    // 3. Gestione della proprietà (ownership)
-    // Solo superuser o admin possono modificare la ownership passando un nuovo userId valido
     let targetUserId = transaction.userId;
     if ((currentUserRole === "superuser" || currentUserRole === "admin") && newUserId) {
       targetUserId = newUserId;

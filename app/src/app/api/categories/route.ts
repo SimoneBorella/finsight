@@ -17,7 +17,6 @@ export async function GET() {
     const rawCategories = await db.collection("categories").find({}).toArray();
     await client.close();
 
-    // Mappiamo i campi snake_case del DB nel formato camelCase atteso dal frontend
     const categories = rawCategories.map((cat: any) => ({
       _id: cat._id,
       name: cat.name,

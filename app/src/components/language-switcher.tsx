@@ -19,7 +19,6 @@ export function LanguageSwitcher() {
   const [isPending, startTransition] = React.useTransition();
 
   const handleLanguageChange = (nextLocale: string) => {
-    // startTransition evita che l'interfaccia si blocchi durante il cambio di rotta
     startTransition(() => {
       router.replace(pathname, { locale: nextLocale });
     });

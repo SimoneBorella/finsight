@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "@/i18n/routing"; // <-- Modificato per usare il routing i18n
-import { useTranslations } from "next-intl"; // <-- Aggiunto hook per le traduzioni
+import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { Loader2, Eye, EyeOff } from "lucide-react"; 
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const t = useTranslations("Login"); // <-- Inizializzazione traduzioni
+  const t = useTranslations("Login");
   
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
@@ -43,7 +43,7 @@ export default function LoginPage() {
     });
 
     if (res?.error) {
-      setError(t("invalidCredentials")); // <-- Messaggio d'errore tradotto
+      setError(t("invalidCredentials"));
       setLoading(false);
     } else {
       router.push("/dashboard");

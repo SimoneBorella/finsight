@@ -1,20 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useTranslations } from "next-intl"; // <-- Hook per traduzioni
+import { useTranslations } from "next-intl";
 import ReactMarkdown from "react-markdown";
 import { Edit2, Eye, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AnnotationsPage() {
-  const t = useTranslations("Annotations"); // <-- Inizializzazione traduzioni
+  const t = useTranslations("Annotations");
 
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Al montaggio, recuperiamo gli appunti dal database MongoDB
   useEffect(() => {
     const fetchAnnotations = async () => {
       try {
@@ -33,7 +32,6 @@ export default function AnnotationsPage() {
     fetchAnnotations();
   }, []);
 
-  // Salvataggio nel database
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -53,7 +51,6 @@ export default function AnnotationsPage() {
     }
   };
 
-  // Mostra un loader centrale mentre aspettiamo la risposta da MongoDB
   if (isLoading) {
     return (
       <div className="flex h-[calc(100dvh-var(--header-height)-4rem)] items-center justify-center">
@@ -65,7 +62,6 @@ export default function AnnotationsPage() {
   return (
     <div className="@container/main flex flex-col gap-6 py-6 px-4 md:px-6 min-h-[calc(100dvh-var(--header-height)-4rem)]">
       
-      {/* HEADER DELLA PAGINA CON I TASTI AZIONE */}
       <div className="flex items-center justify-between border-b pb-4">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         {isEditing ? (
@@ -91,10 +87,8 @@ export default function AnnotationsPage() {
         )}
       </div>
 
-      {/* AREA DI CONTENUTO */}
       <div className="flex-1 rounded-xl">
         {isEditing ? (
-          // MODALITÀ EDITOR MARKDOWN
           <textarea
             className="w-full h-full min-h-[500px] p-4 bg-muted/30 border rounded-lg resize-y focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm text-foreground"
             value={content}
@@ -103,7 +97,6 @@ export default function AnnotationsPage() {
             disabled={isSaving}
           />
         ) : (
-          // MODALITÀ VISUALIZZAZIONE
           <div className="space-y-8 p-2">
             <ReactMarkdown
               components={{

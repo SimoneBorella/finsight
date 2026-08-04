@@ -25,7 +25,6 @@ export default function WealthPage() {
   
   const [loading, setLoading] = React.useState(true);
   
-  // IMPOSTATO A "last6Months" COME DEFAULT
   const [period, setPeriod] = React.useState<PeriodShortcut>("last6Months");
   const [displayStartDate, setDisplayStartDate] = React.useState<string>("");
   const [displayEndDate, setDisplayEndDate] = React.useState<string>("");
@@ -36,7 +35,6 @@ export default function WealthPage() {
   const [totalWealth, setTotalWealth] = React.useState<number>(0);
   const [periodVariation, setPeriodVariation] = React.useState<number>(0);
 
-  // GESTIONE DATE RAPIDE
   React.useEffect(() => {
     const today = new Date();
     if (period === "currentMonth") {

@@ -54,20 +54,17 @@ export default function TransactionsPage() {
   const constLimit = 50;
   const [total, setTotal] = React.useState(0);
 
-  // Filtri
   const [typeFilter, setTypeFilter] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("");
   const [userFilter, setUserFilter] = React.useState("");
   const [startDate, setStartDate] = React.useState("");
   const [endDate, setEndDate] = React.useState("");
 
-  // Stati Azioni Modifica/Elimina
   const [transactionToDelete, setTransactionToDelete] = React.useState<string | null>(null);
   const [transactionToEdit, setTransactionToEdit] = React.useState<Transaction | null>(null);
   const [actionLoading, setActionLoading] = React.useState(false);
   const [editError, setEditError] = React.useState("");
 
-  // Stati Traduzione
   const [translatedDescriptions, setTranslatedDescriptions] = React.useState<Record<string, string>>({});
   const [isTranslating, setIsTranslating] = React.useState<Record<string, boolean>>({});
 
@@ -232,13 +229,11 @@ export default function TransactionsPage() {
   const filteredCategories = typeFilter ? categories.filter(c => c.type === typeFilter) : categories;
 
   return (
-    // MODIFICATO: px-1 su mobile per sfruttare al massimo lo spazio laterale esattamente come la dashboard
     <div className="@container/main flex flex-col gap-6 py-4 px-1 sm:px-3 md:px-6 pb-24 min-h-[calc(100dvh-var(--header-height)-4rem)]">
       <div className="px-2 sm:px-0">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       </div>
 
-      {/* BARRA DEI FILTRI */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-6 p-4 rounded-md border bg-card text-card-foreground shadow-sm items-end">
         <div className="space-y-1">
           <Label>{t("filters.user")}</Label>
@@ -282,7 +277,6 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* TABELLA */}
       <div className="rounded-md border bg-card text-card-foreground shadow-sm relative overflow-x-auto">
         {loading && <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
         <Table>
@@ -384,7 +378,6 @@ export default function TransactionsPage() {
         </Table>
       </div>
 
-      {/* PAGINAZIONE */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
         <div className="text-sm text-muted-foreground text-center sm:text-left">
           {t("pagination.showing", {
@@ -417,7 +410,6 @@ export default function TransactionsPage() {
 
       <AddTransactionModal />
 
-      {/* MODAL ELIMINA */}
       <Dialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("deleteModal.title")}</DialogTitle></DialogHeader>
@@ -431,7 +423,6 @@ export default function TransactionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* MODAL MODIFICA */}
       <Dialog open={!!transactionToEdit} onOpenChange={(open) => { if(!open) { setTransactionToEdit(null); setEditError(""); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("editModal.title")}</DialogTitle></DialogHeader>

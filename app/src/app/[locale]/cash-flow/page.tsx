@@ -31,7 +31,6 @@ export default function CashFlowPage() {
   const [loading, setLoading] = React.useState(true);
   const [granularity, setGranularity] = React.useState<Granularity>("parentCategory");
   
-  // IMPOSTATO A "last6Months" COME DEFAULT
   const [period, setPeriod] = React.useState<PeriodShortcut>("last6Months");
   const [startDate, setStartDate] = React.useState<string>("");
   const [endDate, setEndDate] = React.useState<string>("");
@@ -44,7 +43,6 @@ export default function CashFlowPage() {
     "Income": "#10b981", "Needs": "#ef4444", "Wants": "#f59e0b", "Savings": "#3b82f6"
   });
 
-  // GESTIONE DATE: Si fermano al giorno attuale (today)
   React.useEffect(() => {
     const today = new Date();
     if (period === "currentMonth") {

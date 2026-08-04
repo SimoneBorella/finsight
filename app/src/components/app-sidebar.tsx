@@ -19,22 +19,16 @@ import {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { status } = useSession();
-  
-  // 1. Estraiamo anche "open" (lo stato attuale su desktop)
   const { isMobile, setOpenMobile, open } = useSidebar(); 
 
-  // 2. SINCRONIZZAZIONE INFALLIBILE DEL COOKIE
-  // Ogni volta che "open" cambia, forziamo il salvataggio del cookie per tutto il dominio.
   React.useEffect(() => {
     document.cookie = `sidebar:state=${open}; path=/; max-age=31536000`;
   }, [open]);
 
-  // Se l'utente non è autenticato, non mostriamo/rendiamo attiva la sidebar
   if (status !== "authenticated") {
     return null;
   }
 
-  // Funzione helper per chiudere la sidebar solo se siamo su mobile
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);

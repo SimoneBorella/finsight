@@ -112,7 +112,6 @@ export default function ExpenseTrendsPage() {
   const currentData = activeTab === "monthly" ? monthlyData : yearlyData;
   const defaultStartIndex = Math.max(0, currentData.length - (activeTab === "monthly" ? 12 : 5));
 
-  // Tooltip personalizzato per il Bilancio Netto
   const CustomNetBalanceTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload as TrendData;
@@ -138,7 +137,6 @@ export default function ExpenseTrendsPage() {
   };
 
   return (
-    // MODIFICATO: px-1 su mobile per sfruttare al massimo lo spazio laterale esattamente come le altre pagine
     <div className="flex flex-col gap-6 py-6 px-1 sm:px-3 md:px-6 min-h-[calc(100dvh-4rem)] pb-24">
       <div className="px-2 sm:px-0">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
@@ -184,7 +182,6 @@ export default function ExpenseTrendsPage() {
             </p>
           </div>
 
-          {/* GRAFICO 1: ENTRATE VS USCITE */}
           <Card className="xl:col-span-2">
             <CardHeader>
               <CardTitle>{t("charts.incomeVsExpense")}</CardTitle>
@@ -211,7 +208,6 @@ export default function ExpenseTrendsPage() {
             </CardContent>
           </Card>
 
-          {/* GRAFICO 2: ANDAMENTO BILANCIO NETTO */}
           <Card className="xl:col-span-2">
             <CardHeader>
               <CardTitle>{t("charts.netBalance")}</CardTitle>
@@ -250,7 +246,6 @@ export default function ExpenseTrendsPage() {
             </CardContent>
           </Card>
 
-          {/* GRAFICO 3: COMPOSIZIONE USCITE (100% Stacked Area) */}
           <Card className="xl:col-span-2">
             <CardHeader>
               <CardTitle>{t("charts.expenseComposition")}</CardTitle>

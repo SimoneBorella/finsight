@@ -31,7 +31,6 @@ export default function CategoryStatsPage() {
   const [loading, setLoading] = React.useState(true);
   const [granularity, setGranularity] = React.useState<Granularity>("parentCategory");
   
-  // IMPOSTATO A "last6Months" COME DEFAULT
   const [period, setPeriod] = React.useState<PeriodShortcut>("last6Months");
   const [startDate, setStartDate] = React.useState<string>("");
   const [endDate, setEndDate] = React.useState<string>("");

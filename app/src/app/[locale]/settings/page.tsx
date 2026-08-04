@@ -78,7 +78,6 @@ export default function SettingsPage() {
 
   const [categories, setCategories] = React.useState<any[]>([]);
 
-  // --- STATI GESTIONE UTENTI ---
   const [usersList, setUsersList] = React.useState<UserItem[]>([]);
   const [loadingUsers, setLoadingUsers] = React.useState(false);
   const [isAddUserOpen, setIsAddUserOpen] = React.useState(false);
@@ -86,12 +85,10 @@ export default function SettingsPage() {
   const [userError, setUserError] = React.useState("");
   const [userToDelete, setUserToDelete] = React.useState<UserItem | null>(null);
 
-  // --- STATI CAMBIO PASSWORD ---
   const [passwordError, setPasswordError] = React.useState("");
   const [passwordSuccess, setPasswordSuccess] = React.useState("");
   const [passwordLoading, setPasswordLoading] = React.useState(false);
 
-  // Fetch delle categorie all'avvio
   React.useEffect(() => {
     fetch("/api/categories")
       .then((res) => res.json())
@@ -120,7 +117,6 @@ export default function SettingsPage() {
     }
   }, [activeTab, fetchUsers]);
 
-  // Handler Creazione Utente
   const handleCreateUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setUserError("");
@@ -237,7 +233,6 @@ export default function SettingsPage() {
 
       <div className="flex flex-col flex-1 gap-6 min-h-0">
         
-        {/* Navigazione Tab */}
         <div className="flex items-center border-b pb-3 overflow-x-auto whitespace-nowrap shrink-0">
           <div className="flex items-center gap-2">
             <button onClick={() => handleTabChange("categories")} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "categories" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
@@ -255,10 +250,8 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Contenitore dei Tab */}
         <div className="p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex-1 flex flex-col min-h-0">
           
-          {/* TAB: CATEGORIE */}
           {activeTab === "categories" && (
             <div className="flex-1 flex flex-col min-h-0 space-y-6">
               <div className="shrink-0">
@@ -273,12 +266,10 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Colonne separate per Uscite ("expense") e Entrate ("income") */}
                     {(["expense", "income"] as const).map((type) => {
                       const typeCategories = categories.filter(c => c.type === type);
                       if (typeCategories.length === 0) return null;
 
-                      // 1. Raggruppiamo prima per budgetGroup
                       const groupedByBudget = typeCategories.reduce((acc: any, cat) => {
                         const group = cat.budgetGroup || "Altro";
                         if (!acc[group]) acc[group] = [];
@@ -299,7 +290,6 @@ export default function SettingsPage() {
                               const groupKey = `budgetGroups.${budgetGroup.toLowerCase()}`;
                               const translatedGroup = t.has(groupKey as any) ? t(groupKey as any) : budgetGroup;
 
-                              // 2. All'interno del budgetGroup, raggruppiamo per parentCategory
                               const groupedByParent = cats.reduce((acc: any, cat: any) => {
                                 const parent = cat.parentCategory || "Generale";
                                 if (!acc[parent]) acc[parent] = [];
@@ -309,7 +299,6 @@ export default function SettingsPage() {
 
                               return (
                                 <div key={budgetGroup} className="space-y-4 rounded-xl border bg-muted/20 p-4 shadow-sm">
-                                  {/* Intestazione del Gruppo di Budget */}
                                   <div className="flex items-center justify-between border-b pb-2">
                                     <span className="text-xs font-bold tracking-wider text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-md">
                                       {translatedGroup}
@@ -319,10 +308,8 @@ export default function SettingsPage() {
                                     </span>
                                   </div>
 
-                                  {/* Sotto-raggruppamento marcato per Parent Category */}
                                   <div className="space-y-4 pt-1">
                                     {Object.entries(groupedByParent).map(([parentCat, subCats]: [string, any]) => {
-                                      // Colore rappresentativo della macro-categoria basato sulla prima sotto-categoria che ha un colore
                                       const representativeCat = subCats.find((c: any) => c.color);
                                       const groupColor = representativeCat?.color || "#64748b";
                                       const translatedParent = tCat.has(parentCat) ? tCat(parentCat) : parentCat;
@@ -332,10 +319,9 @@ export default function SettingsPage() {
                                           key={parentCat} 
                                           className="rounded-lg border bg-card p-3 shadow-2xs space-y-2.5"
                                           style={{
-                                            borderColor: `${groupColor}40`, // Bordo leggermente colorato per marcare il gruppo
+                                            borderColor: `${groupColor}40`,
                                           }}
                                         >
-                                          {/* Badge / Intestazione della Macro-Categoria (Parent Category) */}
                                           <div className="flex items-center justify-between">
                                             <span 
                                               className="text-xs font-bold px-2 py-0.5 rounded-md border"
@@ -352,7 +338,6 @@ export default function SettingsPage() {
                                             </span>
                                           </div>
 
-                                          {/* Lista delle sotto-categorie */}
                                           <div className="space-y-1.5 pl-2">
                                             {subCats.map((cat: any) => {
                                               const catColor = cat.color || groupColor;
@@ -391,7 +376,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TAB: CAMBIO PASSWORD */}
           {activeTab === "password" && (
             <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full space-y-8">
               <div>
@@ -418,7 +402,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TAB: UTENTI */}
           {activeTab === "users" && (
             <div className="flex-1 flex flex-col min-h-0 space-y-6"> 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
@@ -512,7 +495,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* MODALE CREAZIONE UTENTE */}
       <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
         <DialogContent>
           <DialogHeader>
@@ -584,7 +566,6 @@ export default function SettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* MODALE ELIMINA UTENTE */}
       <Dialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
         <DialogContent>
           <DialogHeader>

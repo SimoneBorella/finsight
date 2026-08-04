@@ -98,7 +98,6 @@ export default function DashboardPage() {
     );
   }
 
-  // --- DEFINIZIONE FINESTRA 6 MESI (Termina al mese precedente a quello attuale) ---
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
@@ -116,7 +115,6 @@ export default function DashboardPage() {
   
   const sixMonthsAgo = sixMonthsData[0].startDate;
 
-  // --- CALCOLO AREA CHART (Bilancio Netto ultimi 6 mesi chiusi) ---
   transactions.forEach((tx) => {
     const txDate = new Date(tx.date);
     if (txDate >= sixMonthsAgo && txDate <= endOfPreviousMonth) {
@@ -128,7 +126,6 @@ export default function DashboardPage() {
     }
   });
 
-  // --- CALCOLI METRICHE SOGGETTE AI 6 MESI CHIUSI ---
   const sixMonthsTransactions = transactions.filter((tx) => {
     const txDate = new Date(tx.date);
     return txDate >= sixMonthsAgo && txDate <= endOfPreviousMonth;
@@ -145,7 +142,6 @@ export default function DashboardPage() {
   const netSavingsSixMonths = totalIncomeSixMonths - totalExpenseSixMonths;
   const savingsRateSixMonths = totalIncomeSixMonths > 0 ? Math.max(0, Math.round((netSavingsSixMonths / totalIncomeSixMonths) * 100)) : 0;
 
-  // --- CALCOLO RADAR CHART (Ultimi 6 mesi chiusi) ---
   const radarMap: Record<string, { amount: number; budgetGroup: string }> = {};
   
   sixMonthsTransactions.forEach((tx) => {
@@ -178,7 +174,6 @@ export default function DashboardPage() {
   return (
     <div className="@container/main flex flex-col gap-8 py-6 px-2 sm:px-2 md:px-6 pb-24 min-h-[calc(100dvh-var(--header-height)-4rem)]">
       
-      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
@@ -187,7 +182,6 @@ export default function DashboardPage() {
         <AddTransactionModal />
       </div>
 
-      {/* KPI CARDS (Ultimi 6 mesi chiusi) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         
         <div 
@@ -258,10 +252,8 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* SEZIONE GRAFICI (Area Chart & Radar) */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
-        {/* Radar Chart: Impronta di Spesa */}
         <div className="lg:col-span-2 p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <div>
@@ -322,7 +314,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Area Chart: Trend Bilancio Netto (Mesi) */}
         <div className="lg:col-span-3 p-6 rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -365,7 +356,6 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* QUICK LINKS DI NAVIGAZIONE */}
       <div>
         <h3 className="font-semibold text-lg mb-4">{t("quickLinksTitle")}</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

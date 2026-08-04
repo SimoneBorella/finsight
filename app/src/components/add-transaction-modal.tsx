@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 
 interface Category {
   _id: string;
-  name: string; // Nome in inglese salvato nel DB
+  name: string;
   type: "income" | "expense";
   color: string;
 }
@@ -30,7 +30,7 @@ export function AddTransactionModal() {
   const router = useRouter(); 
   const t = useTranslations("AddTransactionModal");
   const tErrors = useTranslations("ApiErrors");
-  const tCat = useTranslations("Categories"); // <-- Aggiunto traduttore per le categorie
+  const tCat = useTranslations("Categories");
   
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -78,7 +78,7 @@ export function AddTransactionModal() {
       amount: Math.round(amountFloat * 100),
       currency: formData.get("currency") || "EUR",
       type,
-      category: formData.get("category"), // Invia il nome in inglese originale al database
+      category: formData.get("category"),
       description: formData.get("description"),
       date: formData.get("date") || new Date().toISOString(),
     };

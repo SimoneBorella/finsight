@@ -9,7 +9,6 @@ export async function PATCH(req: Request, context: any) {
   try {
     const session = await getServerSession(authOptions);
     
-    // SOLO IL SUPERUSER PUO' CAMBIARE RUOLI
     if (!session || (session.user as any).role !== "superuser") {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
@@ -18,7 +17,6 @@ export async function PATCH(req: Request, context: any) {
     const targetUserId = params.id;
     const { role } = await req.json();
 
-    // Il superuser può promuovere ad admin o declassare a user, ma non può creare altri superuser
     if (role !== "admin" && role !== "user") {
       return NextResponse.json({ error: "missingData" }, { status: 400 });
     }
@@ -33,7 +31,6 @@ export async function PATCH(req: Request, context: any) {
       return NextResponse.json({ error: "notFound" }, { status: 404 });
     }
 
-    // Non si può modificare il ruolo di un superuser
     if (userToUpdate.role === "superuser") {
       await client.close();
       return NextResponse.json({ error: "cannotDeleteAdmin" }, { status: 403 });
@@ -58,7 +55,6 @@ export async function DELETE(req: Request, context: any) {
     const executingUserId = (session?.user as any)?.id;
     const executingUserRole = (session?.user as any)?.role;
 
-    // SOLO IL SUPERUSER PUO' ELIMINARE UTENTI
     if (!session || executingUserRole !== "superuser") {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
@@ -80,13 +76,11 @@ export async function DELETE(req: Request, context: any) {
       return NextResponse.json({ error: "notFound" }, { status: 404 });
     }
 
-    // Un superuser non può essere eliminato
     if (userToDelete.role === "superuser") {
       await client.close();
       return NextResponse.json({ error: "cannotDeleteAdmin" }, { status: 403 });
     }
 
-    // Migrazione delle transazioni al superuser che sta eseguendo l'azione
     await db.collection("transactions").updateMany(
       { userId: targetUserId }, 
       { $set: { userId: executingUserId } }

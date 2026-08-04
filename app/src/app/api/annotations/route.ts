@@ -16,14 +16,12 @@ export async function GET() {
     await client.connect();
     const db = client.db("finsight_db");
 
-    // Cerchiamo l'unica nota usando un identificatore fisso
     const annotation = await db.collection("annotations").findOne({ type: "dashboard_notes" });
     await client.close();
 
     if (annotation) {
       return NextResponse.json({ content: annotation.content });
     } else {
-      // Se non esiste ancora nulla nel DB, ritorniamo il testo di default
       return NextResponse.json({ content: DEFAULT_MARKDOWN });
     }
   } catch (error) {
@@ -44,7 +42,6 @@ export async function POST(req: Request) {
     await client.connect();
     const db = client.db("finsight_db");
 
-    // Usa "upsert" (aggiorna se esiste, inserisci se non esiste) per mantenere una sola entry
     await db.collection("annotations").updateOne(
       { type: "dashboard_notes" }, // Il nostro ID fisso
       { 

@@ -14,7 +14,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { amount, currency, type, category, description, date } = body;
 
-    // VALIDAZIONI SERVER-SIDE
     if (amount === undefined || amount === null || !type || !category) {
       return NextResponse.json({ error: "missingData" }, { status: 400 });
     }
