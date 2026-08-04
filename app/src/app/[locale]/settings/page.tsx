@@ -224,7 +224,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="@container/main flex flex-col gap-6 py-6 px-4 md:px-6 min-h-[calc(100dvh-var(--header-height)-4rem)]">
+    <div className="@container/main flex flex-col gap-6 py-6 px-2 sm:px-2 md:px-6 min-h-[calc(100dvh-var(--header-height)-4rem)]">
       
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
