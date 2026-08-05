@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableCell, TableHead, TableHeader, TableRow, TableBody } from "@/components/ui/table";
-import { Loader2, TrendingUp, BarChart2, Activity, PieChart } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, BarChart2, Activity, PieChart, Wallet } from "lucide-react";
 import { startOfMonth, startOfYear, subMonths, format } from "date-fns";
 
 type Granularity = "budgetGroup" | "parentCategory" | "name";
@@ -35,8 +35,11 @@ export default function CategoryStatsPage() {
   const [startDate, setStartDate] = React.useState<string>("");
   const [endDate, setEndDate] = React.useState<string>("");
 
-  const [statsData, setStatsData] = React.useState<StatRow[]>([]);
+  const [expenseStats, setExpenseStats] = React.useState<StatRow[]>([]);
+  const [incomeStats, setIncomeStats] = React.useState<StatRow[]>([]);
+  
   const [totalExpenses, setTotalExpenses] = React.useState<number>(0);
+  const [totalIncomes, setTotalIncomes] = React.useState<number>(0);
   const [dynamicColors, setDynamicColors] = React.useState<Record<string, string>>({});
 
   // Gestione date rapide
@@ -83,10 +86,13 @@ export default function CategoryStatsPage() {
         });
         setDynamicColors(colors);
 
-        const transactions = (txRes.transactions || []).filter((tx: any) => tx.type === "expense");
+        const transactions = txRes.transactions || [];
 
-        const categoryMap: Record<string, { total: number; count: number; group: string; monthlyTotals: Record<string, number> }> = {};
-        let grandTotal = 0;
+        const expenseMap: Record<string, any> = {};
+        const incomeMap: Record<string, any> = {};
+        
+        let grandTotalExpense = 0;
+        let grandTotalIncome = 0;
 
         const activeMonthsSet = new Set<string>();
 
@@ -111,52 +117,58 @@ export default function CategoryStatsPage() {
             group = cat.budgetGroup || "Altro";
           }
 
-          grandTotal += amount;
-
-          if (!categoryMap[key]) {
-            categoryMap[key] = { total: 0, count: 0, group, monthlyTotals: {} };
+          if (tx.type === "expense") {
+            grandTotalExpense += amount;
+            if (!expenseMap[key]) expenseMap[key] = { total: 0, count: 0, group, monthlyTotals: {} };
+            expenseMap[key].total += amount;
+            expenseMap[key].count += 1;
+            expenseMap[key].monthlyTotals[monthKey] = (expenseMap[key].monthlyTotals[monthKey] || 0) + amount;
+          } else if (tx.type === "income") {
+            grandTotalIncome += amount;
+            if (!incomeMap[key]) incomeMap[key] = { total: 0, count: 0, group, monthlyTotals: {} };
+            incomeMap[key].total += amount;
+            incomeMap[key].count += 1;
+            incomeMap[key].monthlyTotals[monthKey] = (incomeMap[key].monthlyTotals[monthKey] || 0) + amount;
           }
-
-          categoryMap[key].total += amount;
-          categoryMap[key].count += 1;
-          categoryMap[key].monthlyTotals[monthKey] = (categoryMap[key].monthlyTotals[monthKey] || 0) + amount;
         });
 
-        setTotalExpenses(grandTotal);
+        setTotalExpenses(grandTotalExpense);
+        setTotalIncomes(grandTotalIncome);
 
         const totalMonthsCount = Math.max(1, activeMonthsSet.size);
+        const allMonthsRange = Array.from(activeMonthsSet);
 
-        const rows: StatRow[] = Object.entries(categoryMap).map(([key, data]) => {
-          const percentage = grandTotal > 0 ? (data.total / grandTotal) * 100 : 0;
-          const monthlyAverage = data.total / totalMonthsCount;
+        // Funzione per generare le righe formattate
+        const generateRows = (map: Record<string, any>, grandTotal: number) => {
+          return Object.entries(map).map(([key, data]) => {
+            const percentage = grandTotal > 0 ? (data.total / grandTotal) * 100 : 0;
+            const monthlyAverage = data.total / totalMonthsCount;
+            
+            let varianceSum = 0;
+            allMonthsRange.forEach((m) => {
+              const spentInMonth = data.monthlyTotals[m] || 0;
+              varianceSum += Math.pow(spentInMonth - monthlyAverage, 2);
+            });
 
-          const allMonthsRange = Array.from(activeMonthsSet);
-          
-          let varianceSum = 0;
-          allMonthsRange.forEach((m) => {
-            const spentInMonth = data.monthlyTotals[m] || 0;
-            varianceSum += Math.pow(spentInMonth - monthlyAverage, 2);
-          });
+            const variance = varianceSum / totalMonthsCount;
+            const stdDev = Math.sqrt(variance);
+            const volatility = monthlyAverage > 0 ? stdDev / monthlyAverage : 0;
 
-          const variance = varianceSum / totalMonthsCount;
-          const stdDev = Math.sqrt(variance);
+            return {
+              key,
+              group: data.group,
+              totalAmount: data.total,
+              percentage,
+              monthlyAverage,
+              stdDev,
+              volatility,
+              count: data.count,
+            };
+          }).sort((a, b) => b.totalAmount - a.totalAmount);
+        };
 
-          const volatility = monthlyAverage > 0 ? stdDev / monthlyAverage : 0;
-
-          return {
-            key,
-            group: data.group,
-            totalAmount: data.total,
-            percentage,
-            monthlyAverage,
-            stdDev,
-            volatility,
-            count: data.count,
-          };
-        });
-
-        rows.sort((a, b) => b.totalAmount - a.totalAmount);
-        setStatsData(rows);
+        setExpenseStats(generateRows(expenseMap, grandTotalExpense));
+        setIncomeStats(generateRows(incomeMap, grandTotalIncome));
 
       } catch (err) {
         console.error("Errore calcolo statistiche categorie:", err);
@@ -175,12 +187,74 @@ export default function CategoryStatsPage() {
     return key;
   };
 
-  const topCategory = statsData.length > 0 ? statsData[0] : null;
-  const mostVolatile = [...statsData]
-    .filter(s => s.monthlyAverage > 20)
-    .sort((a, b) => b.volatility - a.volatility)[0];
+  const topExpense = expenseStats.length > 0 ? expenseStats[0] : null;
+  const topIncome = incomeStats.length > 0 ? incomeStats[0] : null;
+  const mostVolatileExpense = [...expenseStats].filter(s => s.monthlyAverage > 20).sort((a, b) => b.volatility - a.volatility)[0];
+  
+  const avgMonthlyExpense = expenseStats.reduce((acc, curr) => acc + curr.monthlyAverage, 0);
+  const avgMonthlyIncome = incomeStats.reduce((acc, curr) => acc + curr.monthlyAverage, 0);
 
-  const avgMonthlyTotal = statsData.reduce((acc, curr) => acc + curr.monthlyAverage, 0);
+  // Componente interno per renderizzare le tabelle
+  const StatsTable = ({ data, isIncome }: { data: StatRow[], isIncome?: boolean }) => (
+    <div className="rounded-md border overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t("table.category")}</TableHead>
+            <TableHead>{t("table.group")}</TableHead>
+            <TableHead className="text-right">{t("table.totalSpent")}</TableHead>
+            <TableHead className="text-right">{t("table.share")}</TableHead>
+            <TableHead className="text-right">{t("table.monthlyAvg")}</TableHead>
+            <TableHead className="text-right">{t("table.stdDev")}</TableHead>
+            <TableHead className="text-right">{t("table.volatility")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((row) => {
+            const color = dynamicColors[row.key] || (isIncome ? "#10b981" : "#94a3b8");
+            return (
+              <TableRow key={row.key}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }}></span>
+                    <span className="truncate">{translateKey(row.key)}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                    isIncome ? "bg-emerald-500/10 text-emerald-500" : 
+                    row.group === "Needs" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"
+                  }`}>
+                    {translateKey(row.group)}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right font-bold">
+                  €{row.totalAmount.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </TableCell>
+                <TableCell className="text-right font-semibold text-muted-foreground">
+                  {row.percentage.toFixed(1)}%
+                </TableCell>
+                <TableCell className={`text-right font-medium ${isIncome ? "text-emerald-500" : ""}`}>
+                  €{row.monthlyAverage.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </TableCell>
+                <TableCell className="text-right text-muted-foreground">
+                  ±€{row.stdDev.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${
+                    isIncome ? 'bg-emerald-500/10 text-emerald-500' :
+                    row.volatility > 0.6 ? 'bg-destructive/10 text-destructive' : row.volatility > 0.3 ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'
+                  }`}>
+                    {(row.volatility * 100).toFixed(0)}%
+                  </span>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-6 py-6 px-1 sm:px-3 md:px-6 min-h-[calc(100dvh-4rem)] pb-24">
@@ -237,128 +311,108 @@ export default function CategoryStatsPage() {
         </div>
       </div>
 
-      {/* RIEPILOGO KPI RAPIDI */}
-      {!loading && statsData.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.totalCategories")}</p>
-              <p className="text-2xl font-bold mt-1">{statsData.length}</p>
-            </div>
-            <div className="p-2.5 bg-primary/10 rounded-lg text-primary">
-              <PieChart className="h-5 w-5" />
-            </div>
-          </div>
+      {loading ? (
+        <div className="min-h-[300px] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-6">
+          {/* TABELLA ENTRATE */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Entrate</CardTitle>
+              <CardDescription>Analisi dettagliata delle categorie di entrata nel periodo selezionato</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {incomeStats.length === 0 ? (
+                <div className="min-h-[150px] flex items-center justify-center text-muted-foreground text-sm">
+                  {t("table.noData")}
+                </div>
+              ) : (
+                <StatsTable data={incomeStats} isIncome={true} />
+              )}
+            </CardContent>
+          </Card>
 
-          <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.topCategory")}</p>
-              <p className="text-xl font-bold mt-1 truncate max-w-[150px]" title={topCategory ? translateKey(topCategory.key) : "-"}>
-                {topCategory ? translateKey(topCategory.key) : "-"}
-              </p>
-              <p className="text-xs text-muted-foreground">€{topCategory?.totalAmount.toFixed(0)} ({topCategory?.percentage.toFixed(1)}%)</p>
-            </div>
-            <div className="p-2.5 bg-destructive/10 rounded-lg text-destructive">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-          </div>
+          {/* TABELLA USCITE */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Spese</CardTitle>
+              <CardDescription>Analisi dettagliata delle categorie di spesa nel periodo selezionato</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {expenseStats.length === 0 ? (
+                <div className="min-h-[150px] flex items-center justify-center text-muted-foreground text-sm">
+                  {t("table.noData")}
+                </div>
+              ) : (
+                <StatsTable data={expenseStats} />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-          <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.avgMonthlyExpense")}</p>
-              <p className="text-2xl font-bold mt-1 text-blue-500">€{avgMonthlyTotal.toFixed(0)}</p>
+      {/* RIEPILOGO KPI RAPIDI (INSIGHTS in basso) */}
+      {!loading && (expenseStats.length > 0 || incomeStats.length > 0) && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold tracking-tight mb-4 px-2 sm:px-0">Insight Generali</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            
+            {/* Entrate Medie Mensili */}
+            <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase">Entrate Medie Mensili</p>
+                <p className="text-2xl font-bold mt-1 text-emerald-500">€{avgMonthlyIncome.toFixed(0)}</p>
+              </div>
+              <div className="p-2.5 bg-emerald-500/10 rounded-lg text-emerald-500">
+                <Wallet className="h-5 w-5" />
+              </div>
             </div>
-            <div className="p-2.5 bg-blue-500/10 rounded-lg text-blue-500">
-              <BarChart2 className="h-5 w-5" />
-            </div>
-          </div>
 
-          <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.mostVolatile")}</p>
-              <p className="text-xl font-bold mt-1 truncate max-w-[150px]" title={mostVolatile ? translateKey(mostVolatile.key) : "-"}>
-                {mostVolatile ? translateKey(mostVolatile.key) : "-"}
-              </p>
-              <p className="text-xs text-muted-foreground">Volatilità: {(mostVolatile?.volatility * 100).toFixed(0)}%</p>
+            {/* Spese Medie Mensili */}
+            <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.avgMonthlyExpense")}</p>
+                <p className="text-2xl font-bold mt-1 text-destructive">€{avgMonthlyExpense.toFixed(0)}</p>
+              </div>
+              <div className="p-2.5 bg-destructive/10 rounded-lg text-destructive">
+                <BarChart2 className="h-5 w-5" />
+              </div>
             </div>
-            <div className="p-2.5 bg-amber-500/10 rounded-lg text-amber-500">
-              <Activity className="h-5 w-5" />
+
+            {/* Categoria di Spesa Principale */}
+            <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.topCategory")}</p>
+                <p className="text-xl font-bold mt-1 truncate max-w-[150px]" title={topExpense ? translateKey(topExpense.key) : "-"}>
+                  {topExpense ? translateKey(topExpense.key) : "-"}
+                </p>
+                <p className="text-xs text-muted-foreground">€{topExpense?.totalAmount.toFixed(0)} ({topExpense?.percentage.toFixed(1)}%)</p>
+              </div>
+              <div className="p-2.5 bg-amber-500/10 rounded-lg text-amber-500">
+                <TrendingDown className="h-5 w-5" />
+              </div>
             </div>
+
+            {/* Categoria di Spesa Più Volatile */}
+            <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.mostVolatile")}</p>
+                <p className="text-xl font-bold mt-1 truncate max-w-[150px]" title={mostVolatileExpense ? translateKey(mostVolatileExpense.key) : "-"}>
+                  {mostVolatileExpense ? translateKey(mostVolatileExpense.key) : "-"}
+                </p>
+                <p className="text-xs text-muted-foreground">Volatilità: {mostVolatileExpense ? (mostVolatileExpense.volatility * 100).toFixed(0) : "0"}%</p>
+              </div>
+              <div className="p-2.5 bg-blue-500/10 rounded-lg text-blue-500">
+                <Activity className="h-5 w-5" />
+              </div>
+            </div>
+
           </div>
         </div>
       )}
 
-      {/* TABELLA STATISTICA DETTAGLIATA */}
-      <Card className="flex-1 flex flex-col">
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-          <CardDescription>{t("subtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="min-h-[300px] flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : statsData.length === 0 ? (
-            <div className="min-h-[200px] flex items-center justify-center text-muted-foreground text-sm">
-              {t("table.noData")}
-            </div>
-          ) : (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("table.category")}</TableHead>
-                    <TableHead>{t("table.group")}</TableHead>
-                    <TableHead className="text-right">{t("table.totalSpent")}</TableHead>
-                    <TableHead className="text-right">{t("table.share")}</TableHead>
-                    <TableHead className="text-right">{t("table.monthlyAvg")}</TableHead>
-                    <TableHead className="text-right">{t("table.stdDev")}</TableHead>
-                    <TableHead className="text-right">{t("table.volatility")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {statsData.map((row) => {
-                    const color = dynamicColors[row.key] || "#94a3b8";
-                    return (
-                      <TableRow key={row.key}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }}></span>
-                            <span className="truncate">{translateKey(row.key)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${row.group === "Needs" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"}`}>
-                            {translateKey(row.group)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          €{row.totalAmount.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-muted-foreground">
-                          {row.percentage.toFixed(1)}%
-                        </TableCell>
-                        <TableCell className="text-right">
-                          €{row.monthlyAverage.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          ±€{row.stdDev.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className={`px-2 py-1 rounded text-xs font-bold ${row.volatility > 0.6 ? 'bg-destructive/10 text-destructive' : row.volatility > 0.3 ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                            {(row.volatility * 100).toFixed(0)}%
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
