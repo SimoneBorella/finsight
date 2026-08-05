@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
         const client = new MongoClient(process.env.MONGODB_URI!);
         await client.connect();
         const db = client.db("finsight_db");
-
+        
         const isEmail = credentials.identifier.includes("@");
         
         const query = isEmail 
@@ -62,6 +62,35 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+  },
+
+  cookies: {
+    sessionToken: {
+      name: `finsight.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL?.startsWith("https"),
+      },
+    },
+    callbackUrl: {
+      name: `finsight.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL?.startsWith("https"),
+      },
+    },
+    csrfToken: {
+      name: `finsight.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production" && process.env.NEXTAUTH_URL?.startsWith("https"),
+      },
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

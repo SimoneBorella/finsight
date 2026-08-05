@@ -13,6 +13,11 @@ const authMiddleware = withAuth(
     pages: {
       signIn: "/login",
     },
+    cookies: {
+      sessionToken: {
+        name: "finsight.session-token",
+      },
+    },
   }
 );
 
