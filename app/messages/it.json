@@ -154,10 +154,10 @@
       "customPeriod": "Personalizzato...",
       "startDate": "Da Data",
       "endDate": "A Data",
-      "granularityLabel": "Livello di dettaglio",
-      "macro": "Macro (Necessità / Extra)",
-      "intermediate": "Intermedio (Categorie Genitore)",
-      "detailed": "Dettagliato (Singole Categorie)",
+      "granularityLabel": "Granularità Categoria",
+      "macro": "Generale",
+      "intermediate": "Intermedia",
+      "detailed": "Dettaglio",
       "allTime": "Tutto lo storico",
       "last6Months": "Ultimi 6 mesi"
     },
@@ -193,12 +193,22 @@
       "title": "Analisi Annuale",
       "description": "Panoramica macroscopica anno su anno."
     },
+    "filters": {
+      "granularityLabel": "Granularità Categoria",
+      "selectLevel": "Seleziona livello",
+      "macro": "Generale",
+      "intermediate": "Intermedia",
+      "detailed": "Dettaglio"
+    },
     "charts": {
+      "categoryTrends": "Andamento Categorie",
+      "categoryTrendsDesc": "Clicca sulle voci della legenda per mostrare o nascondere specifiche categorie dal grafico.",
       "incomeVsExpense": "Entrate vs Uscite Totali",
-      "savingsRate": "Tasso di Risparmio (%)",
-      "expenseComposition": "Composizione Uscite (Necessità vs Extra)",
+      "incomeVsExpenseDesc": "Confronto totale tra entrate complessive e uscite mensili.",
       "netBalance": "Andamento Bilancio Netto",
-      "netBalanceDesc": "Visualizza il bilancio netto (Entrate - Uscite) nel tempo."
+      "netBalanceDesc": "Visualizza il bilancio netto (Entrate - Uscite) nel tempo.",
+      "expenseComposition": "Composizione Uscite (Necessità vs Extra)",
+      "expenseCompositionDesc": "Ignora gli importi per mostrare la proporzione (percentuale) tra Necessità ed Extra."
     },
     "labels": {
       "income": "Entrate",
@@ -242,6 +252,11 @@
   "CategoryStats": {
     "title": "Analisi Statistica Categorie",
     "subtitle": "Metriche avanzate, medie mensili, deviazione standard e variabilità delle spese.",
+    "incomeTitle": "Entrate",
+    "incomeDesc": "Analisi dettagliata delle categorie di entrata nel periodo selezionato.",
+    "expenseTitle": "Spese",
+    "expenseDesc": "Analisi dettagliata delle categorie di spesa nel periodo selezionato.",
+    "generalInsights": "Insight Generali",
     "filters": {
       "periodLabel": "Periodo di Analisi",
       "allTime": "Tutto lo storico",
@@ -252,9 +267,9 @@
       "startDate": "Data inizio",
       "endDate": "Data fine",
       "granularityLabel": "Granularità Categoria",
-      "macro": "Macrogruppo (Needs / Wants)",
-      "intermediate": "Categoria Intermedia (Parent)",
-      "detailed": "Dettaglio (Nome Categoria)"
+      "macro": "Generale",
+      "intermediate": "Intermedia",
+      "detailed": "Dettaglio"
     },
     "table": {
       "category": "Categoria",
@@ -271,7 +286,8 @@
       "totalCategories": "Categorie Attive",
       "topCategory": "Spesa Principale",
       "mostVolatile": "Categoria più Volatile",
-      "avgMonthlyExpense": "Media Spesa / Mese"
+      "avgMonthlyExpense": "Media Spesa / Mese",
+      "avgMonthlyIncome": "Entrate Medie Mensili"
     }
   },
   "Annotations": {

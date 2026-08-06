@@ -154,10 +154,10 @@
       "customPeriod": "Custom...",
       "startDate": "Start Date",
       "endDate": "End Date",
-      "granularityLabel": "Level of detail",
-      "macro": "Macro (Needs / Wants)",
-      "intermediate": "Intermediate (Parent Categories)",
-      "detailed": "Detailed (Single Categories)",
+      "granularityLabel": "Category Granularity",
+      "macro": "General",
+      "intermediate": "Intermediate",
+      "detailed": "Detailed",
       "allTime": "All time",
       "last6Months": "Last 6 Months"
     },
@@ -193,12 +193,22 @@
       "title": "Yearly Analysis",
       "description": "Macroscopic year-over-year overview."
     },
+    "filters": {
+      "granularityLabel": "Category Granularity",
+      "selectLevel": "Select level",
+      "macro": "General",
+      "intermediate": "Intermediate",
+      "detailed": "Detailed"
+    },
     "charts": {
+      "categoryTrends": "Category Trends",
+      "categoryTrendsDesc": "Click on the legend items to show or hide specific categories from the chart.",
       "incomeVsExpense": "Total Income vs Expenses",
-      "savingsRate": "Savings Rate (%)",
-      "expenseComposition": "Expense Composition (Needs vs Wants)",
+      "incomeVsExpenseDesc": "Total comparison between overall income and monthly expenses.",
       "netBalance": "Net Balance Trend",
-      "netBalanceDesc": "View the net balance (Income - Expenses) over time."
+      "netBalanceDesc": "View the net balance (Income - Expenses) over time.",
+      "expenseComposition": "Expense Composition (Needs vs Wants)",
+      "expenseCompositionDesc": "Ignore amounts to show the proportion (percentage) between Needs and Wants."
     },
     "labels": {
       "income": "Income",
@@ -242,6 +252,11 @@
   "CategoryStats": {
     "title": "Category Statistical Analysis",
     "subtitle": "Advanced metrics, monthly averages, standard deviation, and expense variability.",
+    "incomeTitle": "Income",
+    "incomeDesc": "Detailed analysis of income categories in the selected period.",
+    "expenseTitle": "Expenses",
+    "expenseDesc": "Detailed analysis of expense categories in the selected period.",
+    "generalInsights": "General Insights",
     "filters": {
       "periodLabel": "Analysis Period",
       "allTime": "All time",
@@ -252,9 +267,9 @@
       "startDate": "Start date",
       "endDate": "End date",
       "granularityLabel": "Category Granularity",
-      "macro": "Macro Group (Needs / Wants)",
-      "intermediate": "Intermediate Category (Parent)",
-      "detailed": "Detailed (Category Name)"
+      "macro": "General",
+      "intermediate": "Intermediate",
+      "detailed": "Detailed"
     },
     "table": {
       "category": "Category",
@@ -271,7 +286,8 @@
       "totalCategories": "Active Categories",
       "topCategory": "Top Expense",
       "mostVolatile": "Most Volatile",
-      "avgMonthlyExpense": "Avg Monthly Expense"
+      "avgMonthlyExpense": "Avg Monthly Expense",
+      "avgMonthlyIncome": "Avg Monthly Income"
     }
   },
   "Annotations": {
