@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm"; // 👈 Aggiunto per supportare tabelle e tasklist
 import { Edit2, Eye, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -97,20 +98,8 @@ export default function AnnotationsPage() {
             disabled={isSaving}
           />
         ) : (
-          <div className="space-y-8 p-2">
-            <ReactMarkdown
-              components={{
-                h3: ({ node, ...props }) => (
-                  <h3 className="text-xl font-semibold mb-4 mt-8 first:mt-0 text-foreground" {...props} />
-                ),
-                ul: ({ node, ...props }) => (
-                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground" {...props} />
-                ),
-                strong: ({ node, ...props }) => (
-                  <strong className="text-foreground font-semibold" {...props} />
-                ),
-              }}
-            >
+          <div className="prose dark:prose-invert max-w-none p-4 rounded-lg bg-card border shadow-sm">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {content}
             </ReactMarkdown>
           </div>
