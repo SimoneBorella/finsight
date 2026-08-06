@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm"; // 👈 Aggiunto per supportare tabelle e tasklist
+import remarkGfm from "remark-gfm";
 import { Edit2, Eye, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
