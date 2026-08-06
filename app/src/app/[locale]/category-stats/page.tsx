@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableCell, TableHead, TableHeader, TableRow, TableBody } from "@/components/ui/table";
 import { Loader2, TrendingUp, TrendingDown, BarChart2, Activity, PieChart, Wallet } from "lucide-react";
-import { startOfMonth, startOfYear, subMonths, format } from "date-fns";
+// Aggiunto subDays per calcolare esattamente l'ultimo giorno del mese precedente
+import { startOfMonth, startOfYear, subMonths, subDays, format } from "date-fns";
 
 type Granularity = "budgetGroup" | "parentCategory" | "name";
 type PeriodShortcut = "currentMonth" | "currentYear" | "last6Months" | "all" | "custom";
@@ -42,19 +43,24 @@ export default function CategoryStatsPage() {
   const [totalIncomes, setTotalIncomes] = React.useState<number>(0);
   const [dynamicColors, setDynamicColors] = React.useState<Record<string, string>>({});
 
-  // Gestione date rapide
+  // Gestione date rapide modificata per escludere il mese corrente
   React.useEffect(() => {
     const today = new Date();
+    // L'ultimo giorno del mese precedente (es. se siamo ad Agosto, prende il 31 Luglio)
+    const lastDayOfPrevMonth = subDays(startOfMonth(today), 1);
+
     if (period === "currentMonth") {
       setStartDate(format(startOfMonth(today), "yyyy-MM-dd"));
       setEndDate(format(today, "yyyy-MM-dd"));
     } else if (period === "currentYear") {
+      // Dal 1° Gennaio fino all'ultimo giorno del mese precedente
       setStartDate(format(startOfYear(today), "yyyy-MM-dd"));
-      setEndDate(format(today, "yyyy-MM-dd"));
+      setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd"));
     } else if (period === "last6Months") {
-      const sixMonthsAgo = subMonths(today, 6);
-      setStartDate(format(sixMonthsAgo, "yyyy-MM-dd"));
-      setEndDate(format(today, "yyyy-MM-dd"));
+      // Dal 1° del mese di 6 mesi fa fino all'ultimo giorno del mese precedente
+      const firstDayOf6MonthsAgo = startOfMonth(subMonths(today, 6));
+      setStartDate(format(firstDayOf6MonthsAgo, "yyyy-MM-dd"));
+      setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd"));
     } else if (period === "all") {
       setStartDate("");
       setEndDate(format(today, "yyyy-MM-dd"));

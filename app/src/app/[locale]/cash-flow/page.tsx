@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { startOfMonth, startOfYear, subMonths, format } from "date-fns";
+// Aggiunto subDays per il calcolo della fine del mese precedente
+import { startOfMonth, startOfYear, subMonths, subDays, format } from "date-fns";
 
 type Granularity = "budgetGroup" | "parentCategory" | "name";
 type PeriodShortcut = "currentMonth" | "currentYear" | "last6Months" | "all" | "custom";
@@ -43,18 +44,24 @@ export default function CashFlowPage() {
     "Income": "#10b981", "Needs": "#ef4444", "Wants": "#f59e0b", "Savings": "#3b82f6"
   });
 
+  // Gestione date rapide modificata per escludere il mese corrente
   React.useEffect(() => {
     const today = new Date();
+    // L'ultimo giorno del mese precedente
+    const lastDayOfPrevMonth = subDays(startOfMonth(today), 1);
+
     if (period === "currentMonth") {
       setStartDate(format(startOfMonth(today), "yyyy-MM-dd"));
       setEndDate(format(today, "yyyy-MM-dd")); 
     } else if (period === "currentYear") {
+      // Dal 1° Gennaio all'ultimo giorno del mese precedente
       setStartDate(format(startOfYear(today), "yyyy-MM-dd"));
-      setEndDate(format(today, "yyyy-MM-dd")); 
+      setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd")); 
     } else if (period === "last6Months") {
-      const sixMonthsAgo = subMonths(today, 6);
-      setStartDate(format(sixMonthsAgo, "yyyy-MM-dd"));
-      setEndDate(format(today, "yyyy-MM-dd"));
+      // Dal 1° del mese di 6 mesi fa fino all'ultimo giorno del mese precedente
+      const firstDayOf6MonthsAgo = startOfMonth(subMonths(today, 6));
+      setStartDate(format(firstDayOf6MonthsAgo, "yyyy-MM-dd"));
+      setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd"));
     } else if (period === "all") {
       setStartDate(""); 
       setEndDate(format(today, "yyyy-MM-dd"));
