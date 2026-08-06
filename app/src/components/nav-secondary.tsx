@@ -1,7 +1,11 @@
 "use client"
 
-import * as React from "react"
-import { IconNotes, IconSettings } from "@tabler/icons-react"
+import {
+  IconChartBar, 
+  IconTrendingUp, 
+  IconPigMoney,
+  IconChartPie
+} from "@tabler/icons-react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/routing"
 
@@ -13,31 +17,40 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-export function NavSecondary({ ...props }: React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
-  
-  const t = useTranslations("Sidebar");
+export function NavSecondary() {
+  const t = useTranslations("Sidebar"); 
 
   const items = [
     {
-      title: t("annotations"),
-      url: "/annotations",
-      icon: IconNotes,
+      title: t("cashFlow"),
+      url: "/cash-flow",
+      icon: IconChartBar,
     },
     {
-      title: t("settings"),
-      url: "/settings",
-      icon: IconSettings,
-    }
+      title: t("trends"),
+      url: "/trends",
+      icon: IconTrendingUp,
+    },
+    {
+      title: t("categoryStats"),
+      url: "/category-stats",
+      icon: IconChartPie,
+    },
+    {
+      title: t("wealth"),
+      url: "/wealth",
+      icon: IconPigMoney,
+    },
   ];
 
   return (
-    <SidebarGroup {...props}>
+    <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.url}>
               <SidebarMenuButton asChild>
-                <Link href={item.url as any}>
+                <Link href={item.url as any}> 
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                 </Link>

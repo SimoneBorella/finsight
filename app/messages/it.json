@@ -1,5 +1,7 @@
 {
   "Categories": {
+    "Needs": "Necessità",
+    "Wants": "Extra",
     "Salary": "Stipendio",
     "Refunds": "Rimborsi",
     "Extra Income": "Entrate Extra",
@@ -33,6 +35,7 @@
     "Housing & Utilities": "Casa e Utenze",
     "Car & Transport": "Auto e Trasporti",
     "Daily Life": "Vita Quotidiana",
+    "Taxes & Other": "Tasse e Altro",
     "Health & Hygiene": "Salute e Igiene",
     "Miscellaneous": "Varie",
     "Free Time": "Tempo Libero",
@@ -55,6 +58,7 @@
     "trends": "Andamento Spese",
     "wealth": "Patrimonio",
     "categoryStats": "Statistiche Categorie",
+    "objectives": "Obiettivi",
     "annotations": "Annotazioni",
     "settings": "Impostazioni"
   },
@@ -232,20 +236,16 @@
       "currentYear": "Anno Corrente",
       "customPeriod": "Personalizzato...",
       "startDate": "Da Data",
-      "endDate": "A Data",
-      "savingsGoal": "Obiettivo di Risparmio (€)"
+      "endDate": "A Data"
     },
     "chart": {
       "title": "Curva di Accumulo Storica",
       "subtitle": "Il valore del grafico riflette sempre il patrimonio reale totale.",
-      "tooltip": "Patrimonio Reale",
-      "goalLine": "Obiettivo Totale"
+      "tooltip": "Patrimonio Reale"
     },
     "stats": {
       "totalWealth": "Patrimonio Totale",
       "periodVariation": "Variazione periodo visibile:",
-      "goalReached": "🎉 Obiettivo globale raggiunto!",
-      "goalRemaining": "Mancano €{amount} all'obiettivo",
       "noData": "Nessun dato registrato fino a questo momento."
     }
   },
@@ -367,6 +367,31 @@
       "needs": "Necessità",
       "wants": "Extra",
       "income": "Entrate"
+    }
+  },
+  "Objectives": {
+    "title": "Obiettivi",
+    "subtitle": "Monitora i tuoi limiti di spesa e il risparmio mensile",
+    "savings": {
+      "title": "Risparmio Mensile",
+      "setGoal": "Imposta",
+      "inputLabel": "Obiettivo di Risparmio (€)",
+      "cancel": "Annulla",
+      "save": "Salva",
+      "currentNet": "Risparmio Netto Attuale",
+      "edit": "Modifica",
+      "goalReached": "Hai raggiunto il tuo obiettivo di risparmio questo mese!",
+      "emptyState": "Nessun obiettivo di risparmio impostato."
+    },
+    "spending": {
+      "title": "Limiti di Spesa (Budget)",
+      "newLimit": "Nuovo Limite",
+      "emptyState": "Nessun limite di spesa impostato.",
+      "modalDescription": "Seleziona le categorie da includere in questo limite di spesa.",
+      "goalNameLabel": "Nome Obiettivo",
+      "goalNamePlaceholder": "Es. Budget Casa, Ristoranti...",
+      "amountLabel": "Limite Mensile (€)",
+      "categoriesLabel": "Categorie Incluse"
     }
   },
   "AddTransactionModal": {

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,7 +29,6 @@ export default function WealthPage() {
   const [displayStartDate, setDisplayStartDate] = React.useState<string>("");
   const [displayEndDate, setDisplayEndDate] = React.useState<string>("");
   
-  const [savingsGoal, setSavingsGoal] = React.useState<number>(10000);
   const [chartData, setChartData] = React.useState<any[]>([]);
   
   const [totalWealth, setTotalWealth] = React.useState<number>(0);
@@ -155,8 +154,6 @@ export default function WealthPage() {
     fetchAndProcessData();
   }, [displayStartDate, displayEndDate, period, dateLocale]);
 
-  const isGoalReached = totalWealth >= savingsGoal;
-
   return (
     <div className="flex flex-col gap-6 py-6 px-1 sm:px-3 md:px-6 min-h-[calc(100dvh-4rem)] pb-24">
       <div className="px-2 sm:px-0">
@@ -164,60 +161,45 @@ export default function WealthPage() {
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-end bg-card p-4 rounded-xl border shadow-sm">
-        
-        <div className="flex flex-col md:flex-row gap-4 items-end w-full md:w-auto">
-          <div className="space-y-1.5 w-full md:w-auto">
-            <Label>{t("filters.viewLabel")}</Label>
-            <Select value={period} onValueChange={(val) => setPeriod(val as PeriodShortcut)}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder={t("filters.selectPeriod")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="currentMonth">{t("filters.currentMonth")}</SelectItem>
-                <SelectItem value="currentYear">{t("filters.currentYear")}</SelectItem>
-                <SelectItem value="last6Months">{t("filters.last6Months")}</SelectItem>
-                <SelectItem value="all">{t("filters.allTime")}</SelectItem>
-                <SelectItem value="custom">{t("filters.customPeriod")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {period === "custom" && (
-            <>
-              <div className="space-y-1.5 w-full md:w-auto">
-                <Label>{t("filters.startDate")}</Label>
-                <Input 
-                  type="date" 
-                  value={displayStartDate} 
-                  onChange={(e) => setDisplayStartDate(e.target.value)} 
-                  className="h-10"
-                />
-              </div>
-              <div className="space-y-1.5 w-full md:w-auto">
-                <Label>{t("filters.endDate")}</Label>
-                <Input 
-                  type="date" 
-                  value={displayEndDate} 
-                  onChange={(e) => setDisplayEndDate(e.target.value)} 
-                  className="h-10"
-                />
-              </div>
-            </>
-          )}
+      <div className="flex flex-col md:flex-row gap-4 items-end bg-card p-4 rounded-xl border shadow-sm w-full">
+        <div className="space-y-1.5 w-full md:w-auto">
+          <Label>{t("filters.viewLabel")}</Label>
+          <Select value={period} onValueChange={(val) => setPeriod(val as PeriodShortcut)}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder={t("filters.selectPeriod")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="currentMonth">{t("filters.currentMonth")}</SelectItem>
+              <SelectItem value="currentYear">{t("filters.currentYear")}</SelectItem>
+              <SelectItem value="last6Months">{t("filters.last6Months")}</SelectItem>
+              <SelectItem value="all">{t("filters.allTime")}</SelectItem>
+              <SelectItem value="custom">{t("filters.customPeriod")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="space-y-1.5 w-full md:w-[200px] mt-4 md:mt-0">
-          <Label>{t("filters.savingsGoal")}</Label>
-          <Input 
-            type="number" 
-            step="100"
-            value={savingsGoal}
-            onChange={(e) => setSavingsGoal(Number(e.target.value))}
-            className="h-10 font-semibold text-primary"
-          />
-        </div>
-
+        {period === "custom" && (
+          <>
+            <div className="space-y-1.5 w-full md:w-auto">
+              <Label>{t("filters.startDate")}</Label>
+              <Input 
+                type="date" 
+                value={displayStartDate} 
+                onChange={(e) => setDisplayStartDate(e.target.value)} 
+                className="h-10"
+              />
+            </div>
+            <div className="space-y-1.5 w-full md:w-auto">
+              <Label>{t("filters.endDate")}</Label>
+              <Input 
+                type="date" 
+                value={displayEndDate} 
+                onChange={(e) => setDisplayEndDate(e.target.value)} 
+                className="h-10"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <Card className="flex-1 min-h-[500px] flex flex-col">
@@ -243,12 +225,6 @@ export default function WealthPage() {
                     {periodVariation >= 0 ? '+' : ''}€{periodVariation.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-
-                <span className="text-xs text-muted-foreground mt-1">
-                  {isGoalReached 
-                    ? t("stats.goalReached")
-                    : t("stats.goalRemaining", { amount: (savingsGoal - totalWealth).toLocaleString('it-IT', { minimumFractionDigits: 2 }) })}
-                </span>
               </div>
             )}
           </div>
@@ -293,15 +269,6 @@ export default function WealthPage() {
                     labelStyle={{ color: 'black', fontWeight: 'bold', marginBottom: '8px' }}
                     itemStyle={{ padding: '2px 0', color: '#10b981', fontWeight: '600' }}
                   />
-                  
-                  {savingsGoal > 0 && (
-                    <ReferenceLine 
-                      y={savingsGoal} 
-                      stroke="#8b5cf6" 
-                      strokeDasharray="5 5" 
-                      label={{ position: 'top', value: t("chart.goalLine"), fill: '#8b5cf6', fontSize: 12, fontWeight: 500 }} 
-                    />
-                  )}
                   
                   <Area 
                     type="monotone" 

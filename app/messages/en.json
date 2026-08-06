@@ -1,5 +1,8 @@
 {
   "Categories": {
+    "Needs": "Needs",
+    "Wants": "Wants",
+
     "Salary": "Salary",
     "Refunds": "Refunds",
     "Extra Income": "Extra Income",
@@ -33,6 +36,7 @@
     "Housing & Utilities": "Housing & Utilities",
     "Car & Transport": "Car & Transport",
     "Daily Life": "Daily Life",
+    "Taxes & Other": "Taxes & Other",
     "Health & Hygiene": "Health & Hygiene",
     "Miscellaneous": "Miscellaneous",
     "Free Time": "Free Time",
@@ -55,6 +59,7 @@
     "trends": "Expense Trends",
     "wealth": "Wealth",
     "categoryStats": "Category Statistics",
+    "objectives": "Objectives",
     "annotations": "Annotations",
     "settings": "Settings"
   },
@@ -232,20 +237,16 @@
       "currentYear": "Current Year",
       "customPeriod": "Custom...",
       "startDate": "Start Date",
-      "endDate": "End Date",
-      "savingsGoal": "Savings Goal (€)"
+      "endDate": "End Date"
     },
     "chart": {
       "title": "Historical Accumulation Curve",
       "subtitle": "The chart value always reflects the total real wealth.",
-      "tooltip": "Real Wealth",
-      "goalLine": "Total Goal"
+      "tooltip": "Real Wealth"
     },
     "stats": {
       "totalWealth": "Total Wealth",
       "periodVariation": "Visible period variation:",
-      "goalReached": "🎉 Global goal reached!",
-      "goalRemaining": "€{amount} left to reach the goal",
       "noData": "No data recorded so far."
     }
   },
@@ -367,6 +368,31 @@
       "needs": "Needs",
       "wants": "Wants",
       "income": "Income"
+    }
+  },
+  "Objectives": {
+    "title": "Objectives",
+    "subtitle": "Monitor your spending limits and monthly savings",
+    "savings": {
+      "title": "Monthly Savings",
+      "setGoal": "Set Goal",
+      "inputLabel": "Savings Goal (€)",
+      "cancel": "Cancel",
+      "save": "Save",
+      "currentNet": "Current Net Savings",
+      "edit": "Edit",
+      "goalReached": "You have reached your savings goal this month!",
+      "emptyState": "No savings goal set."
+    },
+    "spending": {
+      "title": "Spending Limits (Budget)",
+      "newLimit": "New Limit",
+      "emptyState": "No spending limit set.",
+      "modalDescription": "Select the categories to include in this spending limit.",
+      "goalNameLabel": "Goal Name",
+      "goalNamePlaceholder": "E.g. Housing Budget, Restaurants...",
+      "amountLabel": "Monthly Limit (€)",
+      "categoriesLabel": "Included Categories"
     }
   },
   "AddTransactionModal": {

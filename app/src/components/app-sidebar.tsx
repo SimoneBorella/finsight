@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react"
 import { Link } from "@/i18n/routing"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
+import { NavTertiary } from "@/components/nav-tertiary"
+import { NavPreFooter } from "@/components/nav-prefooter"
 import { NavFooter } from "@/components/nav-footer"
 import {
   Sidebar,
@@ -56,7 +58,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       
       <SidebarContent className="overflow-x-hidden" onClick={handleLinkClick}>
         <NavMain />
-        <NavSecondary className="mt-auto" />
+        <SidebarSeparator className="mx-2" />
+        <NavSecondary />
+        <SidebarSeparator className="mx-2" />
+        <NavTertiary />
+        
+        <NavPreFooter className="mt-auto" />
         <SidebarSeparator className="mx-2" />
         <NavFooter />
       </SidebarContent>
