@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableCell, TableHead, TableHeader, TableRow, TableBody } from "@/components/ui/table";
 import { Loader2, TrendingUp, TrendingDown, BarChart2, Activity, PieChart, Wallet } from "lucide-react";
-// Aggiunto subDays per calcolare esattamente l'ultimo giorno del mese precedente
 import { startOfMonth, startOfYear, subMonths, subDays, format } from "date-fns";
 
 type Granularity = "budgetGroup" | "parentCategory" | "name";
@@ -38,26 +37,23 @@ export default function CategoryStatsPage() {
 
   const [expenseStats, setExpenseStats] = React.useState<StatRow[]>([]);
   const [incomeStats, setIncomeStats] = React.useState<StatRow[]>([]);
+  const [savingsStats, setSavingsStats] = React.useState<StatRow[]>([]);
   
   const [totalExpenses, setTotalExpenses] = React.useState<number>(0);
   const [totalIncomes, setTotalIncomes] = React.useState<number>(0);
   const [dynamicColors, setDynamicColors] = React.useState<Record<string, string>>({});
 
-  // Gestione date rapide modificata per escludere il mese corrente
   React.useEffect(() => {
     const today = new Date();
-    // L'ultimo giorno del mese precedente (es. se siamo ad Agosto, prende il 31 Luglio)
     const lastDayOfPrevMonth = subDays(startOfMonth(today), 1);
 
     if (period === "currentMonth") {
       setStartDate(format(startOfMonth(today), "yyyy-MM-dd"));
       setEndDate(format(today, "yyyy-MM-dd"));
     } else if (period === "currentYear") {
-      // Dal 1° Gennaio fino all'ultimo giorno del mese precedente
       setStartDate(format(startOfYear(today), "yyyy-MM-dd"));
       setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd"));
     } else if (period === "last6Months") {
-      // Dal 1° del mese di 6 mesi fa fino all'ultimo giorno del mese precedente
       const firstDayOf6MonthsAgo = startOfMonth(subMonths(today, 6));
       setStartDate(format(firstDayOf6MonthsAgo, "yyyy-MM-dd"));
       setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd"));
@@ -101,6 +97,7 @@ export default function CategoryStatsPage() {
         let grandTotalIncome = 0;
 
         const activeMonthsSet = new Set<string>();
+        const netMonthlyTotals: Record<string, number> = {};
 
         transactions.forEach((tx: any) => {
           const amount = tx.amount / 100;
@@ -123,14 +120,20 @@ export default function CategoryStatsPage() {
             group = cat.budgetGroup || "Altro";
           }
 
+          if (!netMonthlyTotals[monthKey]) netMonthlyTotals[monthKey] = 0;
+
           if (tx.type === "expense") {
             grandTotalExpense += amount;
+            netMonthlyTotals[monthKey] -= amount;
+            
             if (!expenseMap[key]) expenseMap[key] = { total: 0, count: 0, group, monthlyTotals: {} };
             expenseMap[key].total += amount;
             expenseMap[key].count += 1;
             expenseMap[key].monthlyTotals[monthKey] = (expenseMap[key].monthlyTotals[monthKey] || 0) + amount;
           } else if (tx.type === "income") {
             grandTotalIncome += amount;
+            netMonthlyTotals[monthKey] += amount;
+            
             if (!incomeMap[key]) incomeMap[key] = { total: 0, count: 0, group, monthlyTotals: {} };
             incomeMap[key].total += amount;
             incomeMap[key].count += 1;
@@ -144,7 +147,6 @@ export default function CategoryStatsPage() {
         const totalMonthsCount = Math.max(1, activeMonthsSet.size);
         const allMonthsRange = Array.from(activeMonthsSet);
 
-        // Funzione per generare le righe formattate
         const generateRows = (map: Record<string, any>, grandTotal: number) => {
           return Object.entries(map).map(([key, data]) => {
             const percentage = grandTotal > 0 ? (data.total / grandTotal) * 100 : 0;
@@ -176,6 +178,30 @@ export default function CategoryStatsPage() {
         setExpenseStats(generateRows(expenseMap, grandTotalExpense));
         setIncomeStats(generateRows(incomeMap, grandTotalIncome));
 
+        // --- CALCOLO STATISTICHE DEL RISPARMIO ---
+        const totalSavings = grandTotalIncome - grandTotalExpense;
+        const avgMonthlySavings = totalSavings / totalMonthsCount;
+        
+        let varianceSumSavings = 0;
+        allMonthsRange.forEach((m) => {
+          const netInMonth = netMonthlyTotals[m] || 0;
+          varianceSumSavings += Math.pow(netInMonth - avgMonthlySavings, 2);
+        });
+        
+        const stdDevSavings = Math.sqrt(varianceSumSavings / totalMonthsCount);
+        const volSavings = avgMonthlySavings > 0 ? stdDevSavings / avgMonthlySavings : 0;
+
+        setSavingsStats([{
+          key: "Savings",
+          group: "Balance",
+          totalAmount: totalSavings,
+          percentage: 100, // Il risparmio netto è il 100% di se stesso
+          monthlyAverage: avgMonthlySavings,
+          stdDev: stdDevSavings,
+          volatility: volSavings,
+          count: transactions.length
+        }]);
+
       } catch (err) {
         console.error("Errore calcolo statistiche categorie:", err);
       } finally {
@@ -188,27 +214,26 @@ export default function CategoryStatsPage() {
 
   const translateKey = (key: string) => {
     if (tCat.has(key)) return tCat(key);
-    if (key === "Needs") return "Necessità";
-    if (key === "Wants") return "Extra";
+    if (key === "Needs") return t("groups.needs");
+    if (key === "Wants") return t("groups.wants");
+    if (key === "Savings") return t("groups.savings");
+    if (key === "Balance") return t("groups.balance");
     return key;
   };
 
   const topExpense = expenseStats.length > 0 ? expenseStats[0] : null;
-  const topIncome = incomeStats.length > 0 ? incomeStats[0] : null;
-  const mostVolatileExpense = [...expenseStats].filter(s => s.monthlyAverage > 20).sort((a, b) => b.volatility - a.volatility)[0];
-  
   const avgMonthlyExpense = expenseStats.reduce((acc, curr) => acc + curr.monthlyAverage, 0);
   const avgMonthlyIncome = incomeStats.reduce((acc, curr) => acc + curr.monthlyAverage, 0);
+  const mostVolatileExpense = [...expenseStats].filter(s => s.monthlyAverage > 20).sort((a, b) => b.volatility - a.volatility)[0];
 
-  // Componente interno per renderizzare le tabelle
-  const StatsTable = ({ data, isIncome }: { data: StatRow[], isIncome?: boolean }) => (
+  const StatsTable = ({ data, tableType = "expense" }: { data: StatRow[], tableType?: "income" | "expense" | "savings" }) => (
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>{t("table.category")}</TableHead>
             <TableHead>{t("table.group")}</TableHead>
-            <TableHead className="text-right">{t("table.totalSpent")}</TableHead>
+            <TableHead className="text-right">{t("table.totalAmount")}</TableHead>
             <TableHead className="text-right">{t("table.share")}</TableHead>
             <TableHead className="text-right">{t("table.monthlyAvg")}</TableHead>
             <TableHead className="text-right">{t("table.stdDev")}</TableHead>
@@ -217,7 +242,8 @@ export default function CategoryStatsPage() {
         </TableHeader>
         <TableBody>
           {data.map((row) => {
-            const color = dynamicColors[row.key] || (isIncome ? "#10b981" : "#94a3b8");
+            const color = dynamicColors[row.key] || (tableType === "income" ? "#10b981" : tableType === "savings" ? "#3b82f6" : "#94a3b8");
+            
             return (
               <TableRow key={row.key}>
                 <TableCell className="font-medium">
@@ -228,19 +254,24 @@ export default function CategoryStatsPage() {
                 </TableCell>
                 <TableCell>
                   <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                    isIncome ? "bg-emerald-500/10 text-emerald-500" : 
+                    tableType === "income" ? "bg-emerald-500/10 text-emerald-500" : 
+                    tableType === "savings" ? "bg-blue-500/10 text-blue-500" : 
                     row.group === "Needs" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"
                   }`}>
                     {translateKey(row.group)}
                   </span>
                 </TableCell>
-                <TableCell className="text-right font-bold">
+                <TableCell className={`text-right font-bold ${row.totalAmount < 0 && tableType === "savings" ? "text-destructive" : ""}`}>
                   €{row.totalAmount.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </TableCell>
                 <TableCell className="text-right font-semibold text-muted-foreground">
                   {row.percentage.toFixed(1)}%
                 </TableCell>
-                <TableCell className={`text-right font-medium ${isIncome ? "text-emerald-500" : ""}`}>
+                <TableCell className={`text-right font-medium ${
+                  tableType === "income" ? "text-emerald-500" : 
+                  tableType === "savings" && row.monthlyAverage >= 0 ? "text-blue-500" : 
+                  tableType === "savings" && row.monthlyAverage < 0 ? "text-destructive" : ""
+                }`}>
                   €{row.monthlyAverage.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
@@ -248,7 +279,8 @@ export default function CategoryStatsPage() {
                 </TableCell>
                 <TableCell className="text-right">
                   <span className={`px-2 py-1 rounded text-xs font-bold ${
-                    isIncome ? 'bg-emerald-500/10 text-emerald-500' :
+                    tableType === "income" ? 'bg-emerald-500/10 text-emerald-500' :
+                    tableType === "savings" ? 'bg-blue-500/10 text-blue-500' :
                     row.volatility > 0.6 ? 'bg-destructive/10 text-destructive' : row.volatility > 0.3 ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'
                   }`}>
                     {(row.volatility * 100).toFixed(0)}%
@@ -269,7 +301,6 @@ export default function CategoryStatsPage() {
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      {/* FILTRI */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-end bg-card p-4 rounded-xl border shadow-sm">
         <div className="flex flex-col md:flex-row gap-4 items-end w-full md:w-auto">
           <div className="space-y-1.5 w-full md:w-auto">
@@ -323,11 +354,10 @@ export default function CategoryStatsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {/* TABELLA ENTRATE */}
           <Card>
             <CardHeader>
-              <CardTitle>Entrate</CardTitle>
-              <CardDescription>Analisi dettagliata delle categorie di entrata nel periodo selezionato</CardDescription>
+              <CardTitle>{t("incomeTitle")}</CardTitle>
+              <CardDescription>{t("incomeDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               {incomeStats.length === 0 ? (
@@ -335,16 +365,15 @@ export default function CategoryStatsPage() {
                   {t("table.noData")}
                 </div>
               ) : (
-                <StatsTable data={incomeStats} isIncome={true} />
+                <StatsTable data={incomeStats} tableType="income" />
               )}
             </CardContent>
           </Card>
 
-          {/* TABELLA USCITE */}
           <Card>
             <CardHeader>
-              <CardTitle>Spese</CardTitle>
-              <CardDescription>Analisi dettagliata delle categorie di spesa nel periodo selezionato</CardDescription>
+              <CardTitle>{t("expenseTitle")}</CardTitle>
+              <CardDescription>{t("expenseDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               {expenseStats.length === 0 ? (
@@ -352,23 +381,38 @@ export default function CategoryStatsPage() {
                   {t("table.noData")}
                 </div>
               ) : (
-                <StatsTable data={expenseStats} />
+                <StatsTable data={expenseStats} tableType="expense" />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* TABELLA RISPARMIO */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("savingsTitle")}</CardTitle>
+              <CardDescription>{t("savingsDesc")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {savingsStats.length === 0 ? (
+                <div className="min-h-[150px] flex items-center justify-center text-muted-foreground text-sm">
+                  {t("table.noData")}
+                </div>
+              ) : (
+                <StatsTable data={savingsStats} tableType="savings" />
               )}
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* RIEPILOGO KPI RAPIDI (INSIGHTS in basso) */}
       {!loading && (expenseStats.length > 0 || incomeStats.length > 0) && (
         <div className="mt-6">
-          <h2 className="text-xl font-bold tracking-tight mb-4 px-2 sm:px-0">Insight Generali</h2>
+          <h2 className="text-xl font-bold tracking-tight mb-4 px-2 sm:px-0">{t("generalInsights")}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             
-            {/* Entrate Medie Mensili */}
             <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase">Entrate Medie Mensili</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.avgMonthlyIncome")}</p>
                 <p className="text-2xl font-bold mt-1 text-emerald-500">€{avgMonthlyIncome.toFixed(0)}</p>
               </div>
               <div className="p-2.5 bg-emerald-500/10 rounded-lg text-emerald-500">
@@ -376,7 +420,6 @@ export default function CategoryStatsPage() {
               </div>
             </div>
 
-            {/* Spese Medie Mensili */}
             <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.avgMonthlyExpense")}</p>
@@ -387,7 +430,6 @@ export default function CategoryStatsPage() {
               </div>
             </div>
 
-            {/* Categoria di Spesa Principale */}
             <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.topCategory")}</p>
@@ -401,7 +443,6 @@ export default function CategoryStatsPage() {
               </div>
             </div>
 
-            {/* Categoria di Spesa Più Volatile */}
             <div className="p-4 rounded-xl border bg-card shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase">{t("cards.mostVolatile")}</p>

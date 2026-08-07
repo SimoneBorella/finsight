@@ -257,6 +257,8 @@
     "incomeDesc": "Detailed analysis of income categories in the selected period.",
     "expenseTitle": "Expenses",
     "expenseDesc": "Detailed analysis of expense categories in the selected period.",
+    "savingsTitle": "Net Savings",
+    "savingsDesc": "Analysis of the net balance over the selected period.",
     "generalInsights": "General Insights",
     "filters": {
       "periodLabel": "Analysis Period",
@@ -276,6 +278,7 @@
       "category": "Category",
       "group": "Group",
       "totalSpent": "Total Spent",
+      "totalAmount": "Total",
       "share": "% of Total",
       "monthlyAvg": "Monthly Avg",
       "stdDev": "Std. Deviation",
@@ -289,6 +292,12 @@
       "mostVolatile": "Most Volatile",
       "avgMonthlyExpense": "Avg Monthly Expense",
       "avgMonthlyIncome": "Avg Monthly Income"
+    },
+    "groups": {
+      "needs": "Needs",
+      "wants": "Wants",
+      "savings": "Savings",
+      "balance": "Balance"
     }
   },
   "Annotations": {

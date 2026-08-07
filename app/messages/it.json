@@ -256,6 +256,8 @@
     "incomeDesc": "Analisi dettagliata delle categorie di entrata nel periodo selezionato.",
     "expenseTitle": "Spese",
     "expenseDesc": "Analisi dettagliata delle categorie di spesa nel periodo selezionato.",
+    "savingsTitle": "Risparmio Netto",
+    "savingsDesc": "Analisi del bilancio netto nel periodo selezionato.",
     "generalInsights": "Insight Generali",
     "filters": {
       "periodLabel": "Periodo di Analisi",
@@ -275,6 +277,7 @@
       "category": "Categoria",
       "group": "Gruppo",
       "totalSpent": "Spesa Totale",
+      "totalAmount": "Totale",
       "share": "% sul Totale",
       "monthlyAvg": "Media Mensile",
       "stdDev": "Dev. Standard",
