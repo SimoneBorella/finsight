@@ -66,6 +66,14 @@ export function AddTransactionModal() {
     }
   };
 
+  // Funzione per intercettare l'Invio/Vai della tastiera mobile
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Blocca l'invio del form
+      e.currentTarget.blur(); // Toglie il focus facendo chiudere la tastiera mobile
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -169,6 +177,7 @@ export function AddTransactionModal() {
                 placeholder="0.00"
                 required
                 className="text-lg font-semibold"
+                onKeyDown={handleKeyDown} // Aggiunto gestore tastiera
               />
             </div>
             <div className="col-span-1 space-y-2">
@@ -215,6 +224,7 @@ export function AddTransactionModal() {
               name="description"
               placeholder=""
               maxLength={255}
+              onKeyDown={handleKeyDown} // Aggiunto gestore tastiera
             />
           </div>
 
@@ -225,6 +235,7 @@ export function AddTransactionModal() {
               name="date"
               type="date"
               defaultValue={new Date().toISOString().split("T")[0]}
+              onKeyDown={handleKeyDown} // Aggiunto gestore tastiera per coerenza
             />
           </div>
 
