@@ -291,6 +291,12 @@
       "mostVolatile": "Categoria più Volatile",
       "avgMonthlyExpense": "Media Spesa / Mese",
       "avgMonthlyIncome": "Entrate Medie Mensili"
+    },
+    "groups": {
+      "needs": "Necessità",
+      "wants": "Extra",
+      "savings": "Risparmio",
+      "balance": "Bilancio"
     }
   },
   "Annotations": {
