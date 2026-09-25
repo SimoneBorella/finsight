@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableCell, TableHead, TableHeader, TableRow, TableBody } from "@/components/ui/table";
 import { Loader2, TrendingUp, TrendingDown, BarChart2, Activity, PieChart, Wallet } from "lucide-react";
-import { startOfMonth, startOfYear, subMonths, subDays, format } from "date-fns";
+import { startOfMonth, endOfMonth, startOfYear, subMonths, subDays, format } from "date-fns";
 
 type Granularity = "budgetGroup" | "parentCategory" | "name";
 type PeriodShortcut = "currentMonth" | "currentYear" | "last6Months" | "all" | "custom";
@@ -49,7 +49,7 @@ export default function CategoryStatsPage() {
 
     if (period === "currentMonth") {
       setStartDate(format(startOfMonth(today), "yyyy-MM-dd"));
-      setEndDate(format(today, "yyyy-MM-dd"));
+      setEndDate(format(endOfMonth(today), "yyyy-MM-dd"));
     } else if (period === "currentYear") {
       setStartDate(format(startOfYear(today), "yyyy-MM-dd"));
       setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd"));
@@ -59,7 +59,7 @@ export default function CategoryStatsPage() {
       setEndDate(format(lastDayOfPrevMonth, "yyyy-MM-dd"));
     } else if (period === "all") {
       setStartDate("");
-      setEndDate(format(today, "yyyy-MM-dd"));
+      setEndDate(format(endOfMonth(today), "yyyy-MM-dd"));
     }
   }, [period]);
 

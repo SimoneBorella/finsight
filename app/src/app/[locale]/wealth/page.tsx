@@ -38,17 +38,17 @@ export default function WealthPage() {
     const today = new Date();
     if (period === "currentMonth") {
       setDisplayStartDate(format(startOfMonth(today), "yyyy-MM-dd"));
-      setDisplayEndDate(format(today, "yyyy-MM-dd")); 
+      setDisplayEndDate(format(endOfMonth(today), "yyyy-MM-dd")); 
     } else if (period === "currentYear") {
       setDisplayStartDate(format(startOfYear(today), "yyyy-MM-dd"));
-      setDisplayEndDate(format(today, "yyyy-MM-dd")); 
+      setDisplayEndDate(format(endOfMonth(today), "yyyy-MM-dd")); 
     } else if (period === "last6Months") {
       const sixMonthsAgo = subMonths(today, 6);
       setDisplayStartDate(format(sixMonthsAgo, "yyyy-MM-dd"));
-      setDisplayEndDate(format(today, "yyyy-MM-dd"));
+      setDisplayEndDate(format(endOfMonth(today), "yyyy-MM-dd"));
     } else if (period === "all") {
       setDisplayStartDate(""); 
-      setDisplayEndDate(format(today, "yyyy-MM-dd"));
+      setDisplayEndDate(format(endOfMonth(today), "yyyy-MM-dd"));
     }
   }, [period]);
 
